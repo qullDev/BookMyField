@@ -7,7 +7,7 @@ Welcome to the BookMyField API! This document provides a comprehensive guide for
 The API documentation is generated using Swagger and can be accessed by running the application and navigating to:
 
 ```
-http://localhost:8080/swagger/index.html
+[http://localhost:8080/swagger/index.html](http://localhost:8080/swagger/index.html)
 ```
 
 ## Features
@@ -24,6 +24,7 @@ http://localhost:8080/swagger/index.html
 -   **Database**: PostgreSQL
 -   **Cache**: Redis for token management
 -   **Payments**: Stripe
+-   **API Documentation**: [Swagger](https://swagger.io/)
 
 ---
 
