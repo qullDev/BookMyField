@@ -19,7 +19,7 @@ func main() {
 
 	config.ConnectDatabse()
 
-	err := config.DB.AutoMigrate(&models.User{})
+	err := config.DB.AutoMigrate(&models.User{}, &models.Field{}, &models.Booking{})
 	if err != nil {
 		log.Fatal("Error migrating database:", err.Error())
 		return
@@ -28,7 +28,8 @@ func main() {
 	api := r.Group("/api/v1")
 	{
 		routes.AuthRoutes(api)
-		
+		routes.BookingsRoutes(api)
+		routes.FieldRoutes(api)
 	}
 
 	r.Run(":8080")
