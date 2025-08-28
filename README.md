@@ -34,7 +34,7 @@ Follow these steps to get the backend server running on your local machine.
 
 1.  **Clone the repository:**
     ```sh
-    git clone <your-repo-url>
+    git clone https://github.com/qullDev/BookMyField.git
     cd BookMyField
     ```
 
