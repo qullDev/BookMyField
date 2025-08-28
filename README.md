@@ -196,11 +196,63 @@ Endpoints for retrieving and managing field information.
     }
     ```
 
+#### 4. Update Field (Admin Only)
+
+-   **Endpoint**: `PUT /fields/admin/:id`
+-   **Authorization**: `Bearer <admin_access_token>`
+-   **Request Body**:
+    ```json
+    {
+      "name": "Updated Tennis Court Name",
+      "location": "Updated Westside Club",
+      "price": 80.00
+    }
+    ```
+-   **Success Response** (`200 OK`):
+    ```json
+    {
+      "ID": "...",
+      "Name": "Updated Tennis Court Name",
+      "Location": "Updated Westside Club",
+      "Price": 80.00
+    }
+    ```
+
+#### 5. Delete Field (Admin Only)
+
+-   **Endpoint**: `DELETE /fields/admin/:id`
+-   **Authorization**: `Bearer <admin_access_token>`
+-   **Success Response** (`200 OK`):
+    ```json
+    {
+      "message": "Field deleted successfully"
+    }
+    ```
+
 ### Bookings
 
 Endpoints for creating and managing user bookings.
 
-#### 1. Create a Booking
+#### 1. Get All Bookings (Admin Only)
+
+-   **Endpoint**: `GET /bookings`
+-   **Authorization**: `Bearer <admin_access_token>`
+-   **Description**: Retrieves a list of all bookings from all users.
+-   **Success Response** (`200 OK`):
+    ```json
+    [
+        {
+            "ID": "...",
+            "UserID": "...",
+            "FieldID": "...",
+            "StartTime": "...",
+            "EndTime": "...",
+            "Status": "confirmed"
+        }
+    ]
+    ```
+
+#### 2. Create a Booking
 
 -   **Endpoint**: `POST /bookings`
 -   **Authorization**: `Bearer <user_access_token>`
@@ -225,7 +277,7 @@ Endpoints for creating and managing user bookings.
     }
     ```
 
-#### 2. Get My Bookings
+#### 3. Get My Bookings
 
 -   **Endpoint**: `GET /bookings/me`
 -   **Authorization**: `Bearer <user_access_token>`
