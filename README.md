@@ -130,6 +130,48 @@ Endpoints for user registration and login.
     }
     ```
 
+#### 3. User Logout
+
+-   **Endpoint**: `POST /auth/logout`
+-   **Authorization**: `Bearer <access_token>`
+-   **Description**: Logs the user out by invalidating the access token and deleting the refresh token.
+-   **Request Body**:
+    ```json
+    {
+      "refresh_token": "..."
+    }
+    ```
+-   **Success Response** (`200 OK`):
+    ```json
+    {
+      "message": "Logged out"
+    }
+    ```
+
+#### 4. Refresh Access Token
+
+-   **Endpoint**: `POST /auth/refresh`
+-   **Description**: Issues a new access token using a valid refresh token.
+-   **Request Body**:
+    ```json
+    {
+      "refresh_token": "..."
+    }
+    ```
+-   **Success Response** (`200 OK`):
+    ```json
+    {
+      "access_token": "ey...",
+      "expires_in": 3600
+    }
+    ```
+-   **Error Response** (`401 Unauthorized`):
+    ```json
+    {
+      "error": "Invalid refresh token"
+    }
+    ```
+
 ### Fields
 
 Endpoints for retrieving and managing field information.
@@ -311,9 +353,9 @@ Endpoints for creating and managing user bookings.
     ]
     ```
 
-#### 3. Cancel a Booking
+#### 4. Cancel a Booking
 
--   **Endpoint**: `DELETE /bookings/:id/cancel`
+-   **Endpoint**: `DELETE /bookings/:id/cancel` (or `DELETE /bookings/:id`)
 -   **Authorization**: `Bearer <user_access_token>`
 -   **Description**: Cancels a user's booking. If already paid, it will attempt to refund via Stripe.
 -   **Success Response** (`200 OK`):
