@@ -18,7 +18,14 @@ type CreateBookingInput struct {
 	EndTime   time.Time `json:"end_time" binding:"required"`
 }
 
-// GET /api/v1/bookings
+// GetBookings godoc
+// @Summary Get all bookings (Admin only)
+// @Description Get a list of all bookings. Requires admin privileges.
+// @Tags bookings
+// @Produce  json
+// @Success 200 {array} models.Booking
+// @Failure 500 {object} map[string]interface{}
+// @Router /bookings [get]
 func GetBookings(c *gin.Context) {
 	var bookings []models.Booking
 	if err := config.DB.Find(&bookings).Error; err != nil {
@@ -28,7 +35,18 @@ func GetBookings(c *gin.Context) {
 	c.JSON(http.StatusOK, bookings)
 }
 
-// POST /api/v1/bookings
+// CreateBooking godoc
+// @Summary Create a new booking
+// @Description Create a new booking for a field.
+// @Tags bookings
+// @Accept  json
+// @Produce  json
+// @Param input body CreateBookingInput true "Booking Info"
+// @Success 201 {object} models.Booking
+// @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /bookings [post]
 func CreateBooking(c *gin.Context) {
 	var input CreateBookingInput
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -65,7 +83,14 @@ func CreateBooking(c *gin.Context) {
 	c.JSON(http.StatusCreated, booking)
 }
 
-// controllers/booking.go
+// GetMyBookings godoc
+// @Summary Get my bookings
+// @Description Get a list of bookings for the currently authenticated user.
+// @Tags bookings
+// @Produce  json
+// @Success 200 {array} models.Booking
+// @Failure 500 {object} map[string]interface{}
+// @Router /bookings/me [get]
 func GetMyBookings(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 
@@ -82,6 +107,16 @@ func GetMyBookings(c *gin.Context) {
 	c.JSON(http.StatusOK, bookings)
 }
 
+// CancelBooking godoc
+// @Summary Cancel a booking
+// @Description Cancel a booking by its ID.
+// @Tags bookings
+// @Produce  json
+// @Param id path string true "Booking ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Router /bookings/{id}/cancel [delete]
 func CancelBooking(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 	bookingID := c.Param("id")

@@ -15,7 +15,17 @@ import (
 
 var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
 
-// ======================= REGISTER =======================
+// Register godoc
+// @Summary Register a new user
+// @Description Register a new user with name, email, and password
+// @Tags auth
+// @Accept  json
+// @Produce  json
+// @Param input body models.User true "User Info"
+// @Success 201 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /auth/register [post]
 func Register(c *gin.Context) {
 	var input struct {
 		Name     string `json:"name"`
@@ -53,7 +63,18 @@ func Register(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "User registered successfully"})
 }
 
-// ======================= LOGIN =======================
+// Login godoc
+// @Summary Log in a user
+// @Description Log in a user with email and password
+// @Tags auth
+// @Accept  json
+// @Produce  json
+// @Param input body models.User true "Login Info"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /auth/login [post]
 func Login(c *gin.Context) {
 	var input struct {
 		Email    string `json:"email"`
@@ -97,7 +118,16 @@ func Login(c *gin.Context) {
 	})
 }
 
-// ======================= LOGOUT =======================
+// Logout godoc
+// @Summary Log out a user
+// @Description Log out a user by blacklisting access token and deleting refresh token
+// @Tags auth
+// @Accept  json
+// @Produce  json
+// @Param input body models.User true "Refresh Token"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Router /auth/logout [post]
 func Logout(c *gin.Context) {
 	// ambil access token dari header
 	authHeader := c.GetHeader("Authorization")
@@ -124,7 +154,17 @@ func Logout(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Logged out"})
 }
 
-// ======================= REFRESH =======================
+// Refresh godoc
+// @Summary Refresh access token
+// @Description Refresh access token using a refresh token
+// @Tags auth
+// @Accept  json
+// @Produce  json
+// @Param input body models.User true "Refresh Token"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Router /auth/refresh [post]
 func Refresh(c *gin.Context) {
 	var body struct {
 		RefreshToken string `json:"refresh_token"`

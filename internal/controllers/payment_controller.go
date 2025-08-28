@@ -18,6 +18,19 @@ type CreateCheckoutSessionRequest struct {
 	BookingID string `json:"booking_id" binding:"required"`
 }
 
+// CreateCheckoutSession godoc
+// @Summary Create a checkout session
+// @Description Create a new checkout session for a booking.
+// @Tags payments
+// @Accept  json
+// @Produce  json
+// @Param input body CreateCheckoutSessionRequest true "Booking ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /payments/create-checkout-session [post]
 func CreateCheckoutSession(c *gin.Context) {
 	var req CreateCheckoutSessionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -74,6 +87,15 @@ func CreateCheckoutSession(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"session_url": s.URL})
 }
 
+// StripeWebhook godoc
+// @Summary Stripe webhook
+// @Description Handle Stripe webhook events to update payment status.
+// @Tags payments
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Router /payments/stripe-webhook [post]
 func StripeWebhook(c *gin.Context) {
 	endpointSecret := os.Getenv("STRIPE_WEBHOOK_SECRET")
 	payload, err := c.GetRawData()

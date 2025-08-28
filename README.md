@@ -2,6 +2,14 @@
 
 Welcome to the BookMyField API! This document provides a comprehensive guide for frontend developers to interact with the backend services for a field booking application.
 
+## API Documentation
+
+The API documentation is generated using Swagger and can be accessed by running the application and navigating to:
+
+```
+http://localhost:8080/swagger/index.html
+```
+
 ## Features
 
 -   **User Authentication**: Secure registration and login for users.
