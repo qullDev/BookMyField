@@ -8,11 +8,15 @@ import (
 
 func FieldRoutes(rg *gin.RouterGroup) {
 	field := rg.Group("/fields")
-	field.Use(middlewares.AuthMiddleware()) // semua butuh login
 	{
-		field.GET("/", controllers.GetFields)         // semua user bisa lihat
-		field.POST("/", controllers.CreateField)      // admin only
-		field.PUT("/:id", controllers.UpdateField)    // admin only
-		field.DELETE("/:id", controllers.DeleteField) // admin only
+		field.GET("/", controllers.GetFields)
+		field.GET("/:id", controllers.GetFieldByID)
+	}
+
+	admin := field.Group("/admin", middlewares.AdminOnly())
+	{
+		admin.POST("/", controllers.CreateField)
+		admin.DELETE("/:id", controllers.DeleteField)
+		admin.PUT("/:id", controllers.UpdateField)
 	}
 }

@@ -7,4 +7,5 @@ import (
 
 func PaymentRoutes(api *gin.RouterGroup) {
 	api.POST("/checkout", controllers.CreateCheckoutSession)
+	api.POST("/webhook", controllers.StripeWebhook)
 }

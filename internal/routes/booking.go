@@ -15,5 +15,6 @@ func BookingsRoutes(api *gin.RouterGroup) {
 		booking.GET("/me", controllers.GetMyBookings) // hanya booking user sendiri
 		booking.POST("/", controllers.CreateBooking)
 		booking.DELETE("/:id", controllers.CancelBooking)
+		booking.DELETE("/:id/cancel", controllers.CancelBooking)
 	}
 }

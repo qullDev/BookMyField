@@ -11,14 +11,42 @@ import (
 
 func GetFields(c *gin.Context) {
 	var fields []models.Field
+	query := config.DB
 
-	if err := config.DB.Find(&fields).Error; err != nil {
+	// Filter optional
+	location := c.Query("location")
+	if location != "" {
+		query = query.Where("location ILIKE ?", "%"+location+"%")
+	}
+
+	minPrice := c.Query("min_price")
+	if minPrice != "" {
+		query = query.Where("price >= ?", minPrice)
+	}
+
+	maxPrice := c.Query("max_price")
+	if maxPrice != "" {
+		query = query.Where("price <= ?", maxPrice)
+	}
+
+	if err := query.Find(&fields).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve fields"})
 		return
 	}
 
 	c.JSON(http.StatusOK, fields)
+}
 
+func GetFieldByID(c *gin.Context) {
+	id := c.Param("id")
+
+	var field models.Field
+	if err := config.DB.First(&field, "id = ?", id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Field not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, field)
 }
 
 func CreateField(c *gin.Context) {
