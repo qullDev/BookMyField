@@ -11,7 +11,7 @@ func BookingsRoutes(api *gin.RouterGroup) {
 	booking := api.Group("/bookings")
 	booking.Use(middlewares.AuthMiddleware())
 	{
-		booking.GET("/", controllers.GetBookings)     // semua booking (admin only)
+		booking.GET("/", middlewares.AdminOnly(),controllers.GetBookings)     // semua booking (admin only)
 		booking.GET("/me", controllers.GetMyBookings) // hanya booking user sendiri
 		booking.POST("/", controllers.CreateBooking)
 		booking.DELETE("/:id", controllers.CancelBooking)
