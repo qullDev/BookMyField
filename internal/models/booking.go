@@ -14,6 +14,11 @@ type Booking struct {
 	StartTime time.Time `json:"start_time"`
 	EndTime   time.Time `json:"end_time"`
 	Status    string    `gorm:"type:varchar(20);default:'pending'" json:"status"`
+
+	//relasi
+	user  User  `gorm:"foreignKey:UserID"`
+	field Field `gorm:"foreignKey:FieldID"`
+
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }

@@ -57,7 +57,7 @@ func CreateField(c *gin.Context) {
 func UpdateField(c *gin.Context) {
 	role, _ := c.Get("role")
 	if role != "admin" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Unauthorized"})
+		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
 		return
 	}
 
@@ -66,6 +66,7 @@ func UpdateField(c *gin.Context) {
 	var field models.Field
 	if err := config.DB.First(&field, "id = ?", id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Field not found"})
+		return
 	}
 
 	var input struct {
@@ -79,9 +80,15 @@ func UpdateField(c *gin.Context) {
 		return
 	}
 
-	field.Name = input.Name
-	field.Location = input.Location
-	field.Price = input.Price
+	if input.Name != "" {
+		field.Name = input.Name
+	}
+	if input.Location != "" {
+		field.Location = input.Location
+	}
+	if input.Price != 0 {
+		field.Price = input.Price
+	}
 
 	if err := config.DB.Save(&field).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -89,7 +96,6 @@ func UpdateField(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, field)
-
 }
 
 func DeleteField(c *gin.Context) {

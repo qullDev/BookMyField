@@ -34,16 +34,21 @@ func CreateBooking(c *gin.Context) {
 		return
 	}
 
-	// Ambil user_id dari JWT (diset di middleware)
 	userID, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
 
+	uid, err := uuid.Parse(userID.(string))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user_id in token"})
+		return
+	}
+
 	booking := models.Booking{
 		ID:        uuid.New(),
-		UserID:    userID.(uuid.UUID),
+		UserID:    uid,
 		FieldID:   uuid.MustParse(input.FieldID),
 		StartTime: input.StartTime,
 		EndTime:   input.EndTime,
