@@ -32,7 +32,7 @@ import (
 
 func main() {
 	if err := godotenv.Load("../../.env"); err != nil {
-		log.Fatal("Error loading .env file")
+		log.Println("No .env file found, using environment variables")
 	}
 
 	r := gin.Default()
