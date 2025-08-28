@@ -19,6 +19,8 @@ func main() {
 	r := gin.Default()
 
 	config.ConnectDatabse()
+	config.InitRedis()
+	config.InitStripe()
 
 	err := config.DB.AutoMigrate(&models.User{}, &models.Field{}, &models.Booking{})
 	if err != nil {
