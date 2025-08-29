@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -8,13 +9,22 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/qullDev/BookMyField/internal/config"
 )
 
-var JwtSecret = []byte(os.Getenv("JWT_SECRET")) // perhatikan kapital, harus sama dengan .env
+var JwtSecret []byte
+
+func init() {
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		log.Fatal("JWT_SECRET environment variable is required")
+	}
+	JwtSecret = []byte(secret)
+}
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Ambil header Authorization
+		// Get Authorization header
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header missing"})
@@ -24,15 +34,24 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		// Format header: "Bearer token"
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-		if tokenString == authHeader { // Bearer ga ada
+		if tokenString == authHeader { // Bearer not found
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token format"})
 			c.Abort()
 			return
 		}
 
+		// Check if token is blacklisted
+		if config.RedisClient != nil {
+			if blacklisted, err := config.RedisClient.Get(config.Ctx, "blacklist:"+tokenString).Result(); err == nil && blacklisted != "" {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Token has been revoked"})
+				c.Abort()
+				return
+			}
+		}
+
 		// Parse token
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			// Pastikan method signing benar
+			// Ensure signing method is correct
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, jwt.ErrSignatureInvalid
 			}
@@ -45,9 +64,9 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// Ambil claims
+		// Extract claims
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
-			// cek expired manual juga
+			// Check expiration manually as well
 			if exp, ok := claims["exp"].(float64); ok {
 				if int64(exp) < time.Now().Unix() {
 					c.JSON(http.StatusUnauthorized, gin.H{"error": "Token expired"})
@@ -56,7 +75,7 @@ func AuthMiddleware() gin.HandlerFunc {
 				}
 			}
 
-			// simpan ke context biar bisa dipakai di handler
+			// Store in context for use in handlers
 			c.Set("user_id", claims["user_id"])
 			c.Set("role", claims["role"])
 		}

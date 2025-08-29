@@ -38,10 +38,32 @@ func CreateCheckoutSession(c *gin.Context) {
 		return
 	}
 
-	// ambil booking + field
+	// Get user ID from context
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	// Check if booking exists and belongs to the user
 	var booking models.Booking
-	if err := config.DB.Preload("Field").First(&booking, "id = ?", req.BookingID).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Booking not found"})
+	if err := config.DB.Preload("Field").
+		Where("id = ? AND user_id = ?", req.BookingID, userID).
+		First(&booking).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Booking not found or not authorized"})
+		return
+	}
+
+	// Check if payment already exists for this booking
+	var existingPayment models.Payment
+	if err := config.DB.Where("booking_id = ? AND status IN (?)", req.BookingID, []string{"pending", "succeeded"}).First(&existingPayment).Error; err == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Payment already exists for this booking"})
+		return
+	}
+
+	// Check booking status
+	if booking.Status != "pending" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Booking is not in pending status"})
 		return
 	}
 
@@ -51,17 +73,20 @@ func CreateCheckoutSession(c *gin.Context) {
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{
 				PriceData: &stripe.CheckoutSessionLineItemPriceDataParams{
-					Currency: stripe.String("usd"),
+					Currency: stripe.String("idr"), // Changed to IDR
 					ProductData: &stripe.CheckoutSessionLineItemPriceDataProductDataParams{
 						Name: stripe.String(booking.Field.Name),
 					},
-					UnitAmount: stripe.Int64(int64(booking.Field.Price * 100)), // cents
+					UnitAmount: stripe.Int64(int64(booking.Field.Price)), // IDR doesn't need * 100
 				},
 				Quantity: stripe.Int64(1),
 			},
 		},
 		SuccessURL: stripe.String("http://localhost:3000/success"),
 		CancelURL:  stripe.String("http://localhost:3000/cancel"),
+		Metadata: map[string]string{
+			"booking_id": booking.ID.String(),
+		},
 	}
 
 	s, err := session.New(params)
@@ -70,21 +95,24 @@ func CreateCheckoutSession(c *gin.Context) {
 		return
 	}
 
-	// simpan Payment record
+	// Save Payment record with session ID instead of PaymentIntent ID
 	payment := models.Payment{
 		ID:          uuid.New(),
 		BookingID:   booking.ID,
 		Amount:      booking.Field.Price,
-		Currency:    "usd",
+		Currency:    "idr", // Changed to IDR
 		Status:      "pending",
-		StripeRefID: s.PaymentIntent.ID, // 🔑 simpan PaymentIntent.ID, bukan s.ID
+		StripeRefID: s.ID, // Use session ID for webhook matching
 	}
 	if err := config.DB.Create(&payment).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create payment record"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"session_url": s.URL})
+	c.JSON(http.StatusOK, gin.H{
+		"session_id":  s.ID,
+		"session_url": s.URL,
+	})
 }
 
 // StripeWebhook godoc
@@ -115,9 +143,22 @@ func StripeWebhook(c *gin.Context) {
 	case "checkout.session.completed":
 		var session stripe.CheckoutSession
 		if err := json.Unmarshal(event.Data.Raw, &session); err == nil {
-			config.DB.Model(&models.Payment{}).
+			// Update payment status
+			result := config.DB.Model(&models.Payment{}).
 				Where("stripe_ref_id = ?", session.ID).
 				Update("status", "succeeded")
+
+			if result.Error != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update payment status"})
+				return
+			}
+
+			// Update booking status to confirmed
+			if bookingID, exists := session.Metadata["booking_id"]; exists {
+				config.DB.Model(&models.Booking{}).
+					Where("id = ?", bookingID).
+					Update("status", "confirmed")
+			}
 		}
 
 	case "checkout.session.expired", "checkout.session.async_payment_failed":

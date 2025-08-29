@@ -6,8 +6,10 @@ import (
 )
 
 func AuthRoutes(api *gin.RouterGroup) {
-	api.POST("/register", controllers.Register)
-	api.POST("/login", controllers.Login)
-	api.POST("/logout", controllers.Logout)
-	api.POST("/refresh", controllers.Refresh)
+	auth := api.Group("/auth")
+
+	auth.POST("/register", controllers.Register)
+	auth.POST("/login", controllers.Login)
+	auth.POST("/logout", controllers.Logout)
+	auth.POST("/refresh", controllers.Refresh)
 }
