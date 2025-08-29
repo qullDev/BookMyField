@@ -17,7 +17,8 @@ var JwtSecret []byte
 func init() {
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
-		log.Fatal("JWT_SECRET environment variable is required")
+		log.Println("⚠️ JWT_SECRET not found, using development fallback")
+		secret = "development_jwt_secret_key_please_change_in_production"
 	}
 	JwtSecret = []byte(secret)
 }
