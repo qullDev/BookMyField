@@ -17,7 +17,6 @@ package main
 
 import (
 	"log"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -60,14 +59,8 @@ func main() {
 		routes.BookingsRoutes(api_v1)
 		routes.FieldRoutes(api_v1)
 		routes.PaymentRoutes(api_v1)
+		routes.HealthRoute(api_v1)
 	}
-
-	// Health check
-	r.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"status": "OK",
-		})
-	})
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
