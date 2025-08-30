@@ -18,6 +18,7 @@ package main
 import (
 	"log"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/qullDev/BookMyField/internal/config"
@@ -63,6 +64,13 @@ func main() {
 	}
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:3001", "https://bookmyfield-fe-test-6s7by0ihr-rizqullahs-projects-d502cd15.vercel.app", "http://localhost:3000"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		AllowCredentials: true,
+	}))
 
 	if err := r.Run(":8080"); err != nil {
 		log.Fatal("Error running server:", err.Error())
