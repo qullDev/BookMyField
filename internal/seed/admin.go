@@ -18,12 +18,12 @@ func SeedAdminUser() {
 	}
 
 	// hash password
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
 
 	admin := models.User{
 		ID:       uuid.New(),
 		Name:     "Super Admin",
-		Email:    "admin@bookmyfield.com",
+		Email:    "admin@admin.com",
 		Password: string(hashedPassword),
 		Role:     "admin",
 	}
