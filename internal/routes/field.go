@@ -7,7 +7,7 @@ import (
 )
 
 func FieldRoutes(rg *gin.RouterGroup) {
-	field := rg.Group("/fields")
+	field := rg.Group("/fields", middlewares.AuthMiddleware())
 	{
 		field.GET("/", controllers.GetFields)
 		field.GET("/:id", controllers.GetFieldByID)
