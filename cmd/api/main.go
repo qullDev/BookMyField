@@ -63,6 +63,9 @@ func main() {
 		routes.HealthRoute(api_v1)
 	}
 
+	// Payment success/cancel pages (outside API group)
+	routes.PaymentPagesRoutes(r)
+
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	r.Use(cors.New(cors.Config{
