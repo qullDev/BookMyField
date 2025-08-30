@@ -1,6 +1,41 @@
 # 🏟️ BookMyField API
 
-**BookMyField** adalah aplikasi backend untuk sistem booking lapangan olahraga yang dibangun dengan Go (Golang). Aplikasi ini menyediakan REST API yang lengkap untuk manajemen pengguna, lapangan, booking, dan pembayaran.
+**BookMyField** adalah platform backend untuk sistem booking lapangan olahraga yang menyediakan solusi manajemen lapangan yang efisien dan andal untuk pengelola fasilitas olahraga dan pengguna. Dalam proyek ini, kami bertujuan untuk menyediakan API yang kuat dan terukur yang mendukung semua fungsi inti dari operasi booking lapangan modern. API ini mencakup fitur untuk mengelola pengguna, lapangan, booking, dan pembayaran dengan pengalaman yang seamless.
+
+**Fitur:**
+
+- 🔐 Otentikasi dengan JWT (Access & Refresh Token)
+- 🔓 Otorisasi dengan RBAC (Role Based Access Control) (ADMIN, USER)
+- 🏟️ Manajemen lapangan olahraga (CRUD operations)
+- 📅 Sistem booking real-time dengan validasi tanggal/waktu
+- 💳 Integrasi pembayaran dengan Stripe Payment Gateway (IDR support)
+- 🎣 Implementasi webhook Stripe untuk payment status update otomatis
+- 📄 Dokumentasi standar OpenAPI dengan Swagger UI
+- ✅ Validasi data komprehensif dan error handling
+- 🔒 JWT token blacklisting untuk keamanan ekstra
+- 🔍 Advanced filtering untuk pencarian lapangan
+- 📊 Auto-seeding admin user dan sample data untuk development
+
+**Endpoints:**
+
+- Auth endpoints untuk login, register, refresh token, dan logout
+- Manajemen lapangan (Admin only)
+- Sistem booking lapangan untuk user
+- Track booking history pengguna
+- Pembatalan booking dengan refund otomatis
+- Payment processing dan webhook handling
+- Health check endpoint
+
+**Default Credentials:**
+
+- Admin: admin@admin.com | password123
+- User: user@user.com | password123
+
+**Tech Stack:** Go, Gin Framework, PostgreSQL/SQLite, GORM, Stripe API, JWT, Redis, Swagger
+
+**Repo:** https://github.com/qullDev/BookMyField  
+**Swagger:** http://localhost:8080/swagger/index.html  
+**Postman Collection:** https://github.com/qullDev/BookMyField/blob/main/postman_collection.json
 
 [![Go Version](https://img.shields.io/badge/Go-1.18+-blue.svg)](https://golang.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -10,7 +45,7 @@
 
 Dokumentasi API lengkap tersedia melalui Swagger UI:
 
- [http://localhost:8080/swagger/index.html](http://localhost:8080/swagger/index.html)
+[http://localhost:8080/swagger/index.html](http://localhost:8080/swagger/index.html)
 
 ### 📸 Screenshots Swagger UI
 
@@ -29,13 +64,14 @@ Dokumentasi API lengkap tersedia melalui Swagger UI:
 
 ## 🛠️ Tech Stack
 
-- **Backend**: Go (Golang) with Gin framework
-- **Database**: PostgreSQL with GORM
-- **Cache**: Redis for token management and session storage
-- **Payments**: Stripe (IDR currency support)
-- **API Documentation**: Swagger/OpenAPI
-- **Authentication**: JWT with refresh tokens
-- **Validation**: Gin validator with custom rules
+- **Backend**: Go (Golang) v1.24+ with Gin framework
+- **Database**: PostgreSQL with GORM (SQLite fallback for development)
+- **Cache**: Redis for JWT token blacklisting and session management
+- **Payments**: Stripe API with webhook support (IDR currency)
+- **API Documentation**: Swagger/OpenAPI 3.0 with interactive UI
+- **Authentication**: JWT with access & refresh tokens
+- **Validation**: Gin validator with comprehensive input validation
+- **Development Tools**: Air for live reloading
 
 ---
 
@@ -46,7 +82,7 @@ Follow these steps to get the backend server running on your local machine.
 ### 📋 Prerequisites
 
 - Go (version 1.18 or higher)
-- PostgreSQL
+- PostgreSQL (or SQLite will be used automatically for development)
 - Redis
 - [Air](https://github.com/cosmtrek/air) for live reloading (optional, but recommended)
 
@@ -76,6 +112,12 @@ Follow these steps to get the backend server running on your local machine.
 
 - The application will automatically create the necessary database tables on startup (`AutoMigrate`).
 - It will also seed the database with an admin user, a regular user, and some initial field data.
+- If no `DATABASE_URL` is provided, the app will automatically use SQLite for development.
+
+**Sample seeded data includes:**
+
+- Admin user and regular user accounts
+- 3 sample fields: Futsal (Jakarta), Basket (Bandung), Badminton (Surabaya)
 
 To run the server:
 
@@ -97,13 +139,13 @@ After running the application, you can use these default accounts for testing:
 
 **Admin Account:**
 
-- Email: `admin@bookmyfield.com`
-- Password: `admin123`
+- Email: `admin@admin.com`
+- Password: `password123`
 
 **Regular User Account:**
 
-- Email: `user@bookmyfield.com`
-- Password: `user123`
+- Email: `user@user.com`
+- Password: `password123`
 
 ---
 
@@ -412,7 +454,7 @@ Endpoints for creating and managing user bookings.
 
 #### 4. Cancel a Booking
 
-- **Endpoint**: `DELETE /api/v1/bookings/:id/cancel`
+- **Endpoint**: `DELETE /api/v1/bookings/:id` atau `DELETE /api/v1/bookings/:id/cancel`
 - **Authorization**: `Bearer <user_access_token>`
 - **Description**: Cancels a user's booking. If already paid, it will attempt to refund via Stripe.
 - **Success Response** (`200 OK`):
@@ -518,7 +560,8 @@ BookMyField/
 Copy `.env.example` to `.env` and configure the following variables:
 
 ```bash
-# Database Configuration
+# Database Configuration (PostgreSQL)
+# If not provided, SQLite will be used automatically for development
 DATABASE_URL=postgres://username:password@host:port/dbname
 
 # JWT Configuration
@@ -534,7 +577,6 @@ STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
 # Server Configuration
 PORT=8080
 ```
-
 
 ## ��� Error Handling
 
@@ -572,6 +614,7 @@ The API uses conventional HTTP response codes to indicate the success or failure
 ### Manual Testing with cURL
 
 **Register a new user:**
+
 ```bash
 curl -X POST http://localhost:8080/api/v1/auth/register \
   -H "Content-Type: application/json" \
@@ -583,21 +626,24 @@ curl -X POST http://localhost:8080/api/v1/auth/register \
 ```
 
 **Login:**
+
 ```bash
 curl -X POST http://localhost:8080/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{
-    "email": "test@example.com",
+    "email": "admin@admin.com",
     "password": "password123"
   }'
 ```
 
 **Get all fields:**
+
 ```bash
 curl -X GET http://localhost:8080/api/v1/fields
 ```
 
 **Create a booking (requires authentication):**
+
 ```bash
 curl -X POST http://localhost:8080/api/v1/bookings \
   -H "Content-Type: application/json" \
@@ -612,6 +658,7 @@ curl -X POST http://localhost:8080/api/v1/bookings \
 ## ��� Database Schema
 
 ### Users Table
+
 - `id` (UUID, Primary Key)
 - `name` (VARCHAR)
 - `email` (VARCHAR, Unique)
@@ -620,6 +667,7 @@ curl -X POST http://localhost:8080/api/v1/bookings \
 - `created_at`, `updated_at` (Timestamps)
 
 ### Fields Table
+
 - `id` (UUID, Primary Key)
 - `name` (VARCHAR)
 - `location` (VARCHAR)
@@ -627,6 +675,7 @@ curl -X POST http://localhost:8080/api/v1/bookings \
 - `created_at`, `updated_at` (Timestamps)
 
 ### Bookings Table
+
 - `id` (UUID, Primary Key)
 - `user_id` (UUID, Foreign Key)
 - `field_id` (UUID, Foreign Key)
@@ -635,6 +684,7 @@ curl -X POST http://localhost:8080/api/v1/bookings \
 - `created_at`, `updated_at` (Timestamps)
 
 ### Payments Table
+
 - `id` (UUID, Primary Key)
 - `booking_id` (UUID, Foreign Key)
 - `amount` (DECIMAL)
@@ -658,6 +708,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## ���‍��� Author
 
 **qullDev**
+
 - GitHub: [@qullDev](https://github.com/qullDev)
 
 ---

@@ -33,5 +33,5 @@ func SeedAdminUser() {
 		return
 	}
 
-	log.Println("✅ Seed admin user berhasil (email: admin@bookmyfield.com, password: admin123)")
+	log.Println("✅ Seed admin user berhasil (email: admin@admin.com, password: password123)")
 }
