@@ -14,16 +14,26 @@ var (
 )
 
 func InitRedis() {
-	opt, err := redis.ParseURL(os.Getenv("REDIS_URL"))
+	redisURL := os.Getenv("REDIS_URL")
+
+	if redisURL == "" {
+		log.Println("⚠️ REDIS_URL not found, Redis features will be disabled for development")
+		return
+	}
+
+	opt, err := redis.ParseURL(redisURL)
 	if err != nil {
-		log.Fatalf("⛔Failed to parse Redis URL: %v", err)
+		log.Printf("⚠️ Failed to parse Redis URL: %v. Redis features disabled.", err)
+		return
 	}
 
 	RedisClient = redis.NewClient(opt)
 
 	_, err = RedisClient.Ping(Ctx).Result()
 	if err != nil {
-		log.Fatalf("⛔Failed to connect Redis: %v", err)
+		log.Printf("⚠️ Failed to connect Redis: %v. Redis features disabled.", err)
+		RedisClient = nil
+		return
 	}
 	log.Println("✅ Redis connected")
 }
