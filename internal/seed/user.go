@@ -16,12 +16,12 @@ func SeedRegularUser() {
 		return
 	}
 
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("user123"), bcrypt.DefaultCost)
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
 
 	regularUser := models.User{
 		ID:       uuid.New(),
 		Name:     "Regular User",
-		Email:    "user@bookmyfield.com",
+		Email:    "user@user.com",
 		Password: string(hashedPassword),
 		Role:     "user",
 	}
@@ -31,5 +31,5 @@ func SeedRegularUser() {
 		return
 	}
 
-	log.Println("✅ Seed regular user berhasil (email: user@bookmyfield.com, password: user123)")
+	log.Println("✅ Seed regular user berhasil (email: user@user.com, password: password123)")
 }

@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"gorm.io/driver/postgres"
-	"gorm.io/driver/sqlite"
+	sqlite_driver "gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -21,7 +21,7 @@ func ConnectDatabse() {
 	if dsn == "" {
 		// Development fallback - use SQLite
 		log.Println("⚠️ DATABASE_URL not found, using SQLite for development")
-		db, err = gorm.Open(sqlite.Open("bookmyfield.db"), &gorm.Config{})
+		db, err = gorm.Open(sqlite_driver.Open("bookmyfield.db"), &gorm.Config{})
 	} else {
 		// Production - use PostgreSQL
 		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
