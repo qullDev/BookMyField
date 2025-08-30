@@ -11,14 +11,14 @@ import (
 
 // GetFields godoc
 // @Summary Get all fields
-// @Description Get a list of all fields with optional filtering
+// @Description Get a list of all fields with optional filtering by location and price range
 // @Tags fields
-// @Produce  json
-// @Param location query string false "Location"
-// @Param min_price query number false "Minimum Price"
-// @Param max_price query number false "Maximum Price"
+// @Produce json
+// @Param location query string false "Location filter (case-insensitive)"
+// @Param min_price query number false "Minimum price filter"
+// @Param max_price query number false "Maximum price filter"
 // @Success 200 {array} models.Field
-// @Failure 500 {object} map[string]interface{}
+// @Failure 500 {object} dto.ErrorResponse
 // @Router /fields [get]
 func GetFields(c *gin.Context) {
 	var fields []models.Field
@@ -52,10 +52,10 @@ func GetFields(c *gin.Context) {
 // @Summary Get a field by ID
 // @Description Get a single field by its ID
 // @Tags fields
-// @Produce  json
+// @Produce json
 // @Param id path string true "Field ID"
 // @Success 200 {object} models.Field
-// @Failure 404 {object} map[string]interface{}
+// @Failure 404 {object} dto.ErrorResponse
 // @Router /fields/{id} [get]
 func GetFieldByID(c *gin.Context) {
 	id := c.Param("id")
@@ -73,13 +73,22 @@ func GetFieldByID(c *gin.Context) {
 // @Summary Create a new field (Admin only)
 // @Description Create a new field. Requires admin privileges.
 // @Tags fields
-// @Accept  json
-// @Produce  json
-// @Param input body models.Field true "Field Info"
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// CreateField godoc
+// @Summary Create a new field (Admin only)
+// @Description Create a new field. Requires admin privileges.
+// @Tags fields
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param input body dto.CreateFieldRequest true "Field data"
 // @Success 201 {object} models.Field
-// @Failure 400 {object} map[string]interface{}
-// @Failure 403 {object} map[string]interface{}
-// @Failure 500 {object} map[string]interface{}
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 403 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
 // @Router /fields/admin [post]
 func CreateField(c *gin.Context) {
 	role, _ := c.Get("role")

@@ -23,9 +23,12 @@ type CreateBookingInput struct {
 // @Summary Get all bookings (Admin only)
 // @Description Get a list of all bookings. Requires admin privileges.
 // @Tags bookings
-// @Produce  json
+// @Security BearerAuth
+// @Produce json
 // @Success 200 {array} models.Booking
-// @Failure 500 {object} map[string]interface{}
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 403 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
 // @Router /bookings [get]
 func GetBookings(c *gin.Context) {
 	var bookings []models.Booking
@@ -40,13 +43,16 @@ func GetBookings(c *gin.Context) {
 // @Summary Create a new booking
 // @Description Create a new booking for a field.
 // @Tags bookings
-// @Accept  json
-// @Produce  json
-// @Param input body CreateBookingInput true "Booking Info"
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param input body dto.CreateBookingRequest true "Booking data"
 // @Success 201 {object} models.Booking
-// @Failure 400 {object} map[string]interface{}
-// @Failure 401 {object} map[string]interface{}
-// @Failure 500 {object} map[string]interface{}
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 409 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
 // @Router /bookings [post]
 func CreateBooking(c *gin.Context) {
 	var input CreateBookingInput
@@ -119,9 +125,11 @@ func CreateBooking(c *gin.Context) {
 // @Summary Get my bookings
 // @Description Get a list of bookings for the currently authenticated user.
 // @Tags bookings
-// @Produce  json
+// @Security BearerAuth
+// @Produce json
 // @Success 200 {array} models.Booking
-// @Failure 500 {object} map[string]interface{}
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
 // @Router /bookings/me [get]
 func GetMyBookings(c *gin.Context) {
 	userID, _ := c.Get("user_id")
@@ -141,13 +149,16 @@ func GetMyBookings(c *gin.Context) {
 
 // CancelBooking godoc
 // @Summary Cancel a booking
-// @Description Cancel a booking by its ID.
+// @Description Cancel a booking by its ID. If payment exists, it will be refunded.
 // @Tags bookings
-// @Produce  json
+// @Security BearerAuth
+// @Produce json
 // @Param id path string true "Booking ID"
-// @Success 200 {object} map[string]interface{}
-// @Failure 400 {object} map[string]interface{}
-// @Failure 404 {object} map[string]interface{}
+// @Success 200 {object} dto.CancelBookingResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
 // @Router /bookings/{id}/cancel [delete]
 func CancelBooking(c *gin.Context) {
 	userID, _ := c.Get("user_id")

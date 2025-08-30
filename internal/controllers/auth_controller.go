@@ -19,12 +19,12 @@ var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
 // @Summary Register a new user
 // @Description Register a new user with name, email, and password
 // @Tags auth
-// @Accept  json
-// @Produce  json
-// @Param input body models.User true "User Info"
-// @Success 201 {object} map[string]interface{}
-// @Failure 400 {object} map[string]interface{}
-// @Failure 500 {object} map[string]interface{}
+// @Accept json
+// @Produce json
+// @Param input body dto.RegisterRequest true "User registration data"
+// @Success 201 {object} dto.MessageResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
 // @Router /auth/register [post]
 func Register(c *gin.Context) {
 	var input struct {
@@ -74,13 +74,13 @@ func Register(c *gin.Context) {
 // @Summary Log in a user
 // @Description Log in a user with email and password
 // @Tags auth
-// @Accept  json
-// @Produce  json
-// @Param input body models.User true "Login Info"
-// @Success 200 {object} map[string]interface{}
-// @Failure 400 {object} map[string]interface{}
-// @Failure 401 {object} map[string]interface{}
-// @Failure 500 {object} map[string]interface{}
+// @Accept json
+// @Produce json
+// @Param input body dto.LoginRequest true "User login credentials"
+// @Success 200 {object} dto.LoginResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
 // @Router /auth/login [post]
 func Login(c *gin.Context) {
 	var input struct {
@@ -132,11 +132,13 @@ func Login(c *gin.Context) {
 // @Summary Log out a user
 // @Description Log out a user by blacklisting access token and deleting refresh token
 // @Tags auth
-// @Accept  json
-// @Produce  json
-// @Param input body models.User true "Refresh Token"
-// @Success 200 {object} map[string]interface{}
-// @Failure 400 {object} map[string]interface{}
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param input body dto.LogoutRequest true "Refresh token to invalidate"
+// @Success 200 {object} dto.MessageResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
 // @Router /auth/logout [post]
 func Logout(c *gin.Context) {
 	// ambil access token dari header
@@ -168,12 +170,13 @@ func Logout(c *gin.Context) {
 // @Summary Refresh access token
 // @Description Refresh access token using a refresh token
 // @Tags auth
-// @Accept  json
-// @Produce  json
-// @Param input body models.User true "Refresh Token"
-// @Success 200 {object} map[string]interface{}
-// @Failure 400 {object} map[string]interface{}
-// @Failure 401 {object} map[string]interface{}
+// @Accept json
+// @Produce json
+// @Param input body dto.RefreshRequest true "Refresh token"
+// @Success 200 {object} dto.LoginResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
 // @Router /auth/refresh [post]
 func Refresh(c *gin.Context) {
 	var body struct {
