@@ -162,6 +162,7 @@ Endpoints for user registration and login.
 - **Endpoint**: `POST /api/v1/auth/register`
 - **Description**: Registers a new user.
 - **Request Body**:
+
   ```json
   {
     "name": "John Doe",
@@ -169,6 +170,13 @@ Endpoints for user registration and login.
     "password": "password123"
   }
   ```
+
+  **Validation:**
+
+  - `name`: Required, minimum 2 characters
+  - `email`: Required, valid email format
+  - `password`: Required, minimum 6 characters
+
 - **Success Response** (`201 Created`):
   ```json
   {
@@ -181,18 +189,28 @@ Endpoints for user registration and login.
     "error": "Email already registered"
   }
   ```
+  **Other error responses:**
+  - `400`: Validation errors (e.g., "Key: 'name' Error:Field validation for 'name' failed on the 'min' tag")
+  - `500`: "Failed to hash password" or "Failed to create user"
 
 #### 2. User Login
 
 - **Endpoint**: `POST /api/v1/auth/login`
 - **Description**: Authenticates a user and returns access and refresh tokens.
 - **Request Body**:
+
   ```json
   {
-    "email": "john.doe@example.com",
+    "email": "admin@admin.com",
     "password": "password123"
   }
   ```
+
+  **Validation:**
+
+  - `email`: Required, valid email format
+  - `password`: Required
+
 - **Success Response** (`200 OK`):
   ```json
   {
@@ -207,12 +225,15 @@ Endpoints for user registration and login.
     "error": "Invalid email or password"
   }
   ```
+  **Other error responses:**
+  - `400`: Validation errors (invalid email format, missing fields)
+  - `500`: "Failed to generate access token" or "Failed to store refresh token"
 
 #### 3. User Logout
 
 - **Endpoint**: `POST /api/v1/auth/logout`
 - **Authorization**: `Bearer <access_token>`
-- **Description**: Logs the user out by invalidating the access token and deleting the refresh token.
+- **Description**: Logs the user out by blacklisting the access token and deleting the refresh token.
 - **Request Body**:
   ```json
   {
@@ -225,17 +246,31 @@ Endpoints for user registration and login.
     "message": "Logged out"
   }
   ```
+- **Error Response** (`400 Bad Request`):
+  ```json
+  {
+    "error": "Invalid body"
+  }
+  ```
+  **Other error responses:**
+  - `401`: Unauthorized (invalid or missing access token)
 
 #### 4. Refresh Access Token
 
 - **Endpoint**: `POST /api/v1/auth/refresh`
-- **Description**: Issues a new access token using a valid refresh token.
+- **Description**: Issues a new access token using a valid refresh token and rotates the refresh token.
 - **Request Body**:
+
   ```json
   {
     "refresh_token": "550e8400-e29b-41d4-a716-446655440000"
   }
   ```
+
+  **Validation:**
+
+  - `refresh_token`: Required
+
 - **Success Response** (`200 OK`):
   ```json
   {
@@ -247,9 +282,13 @@ Endpoints for user registration and login.
 - **Error Response** (`401 Unauthorized`):
   ```json
   {
-    "error": "Invalid refresh token"
+    "error": "Refresh token revoked or expired"
   }
   ```
+  **Other error responses:**
+  - `400`: "Invalid body" (missing refresh_token)
+  - `401`: "User not found" (user associated with token doesn't exist)
+  - `500`: "Failed to generate access token" or "Failed to store new refresh token"
 
 ### 🏟️ Fields
 
@@ -260,9 +299,13 @@ Endpoints for retrieving and managing field information.
 - **Endpoint**: `GET /api/v1/fields`
 - **Description**: Retrieves a list of all available fields, with optional filters.
 - **Query Parameters**:
-  - `location` (string, optional): Filter fields by location (case-insensitive search).
-  - `min_price` (number, optional): Filter for fields with a price greater than or equal to this value.
-  - `max_price` (number, optional): Filter for fields with a price less than or equal to this value.
+
+  - `location` (string, optional): Filter fields by location (case-insensitive search using ILIKE)
+  - `min_price` (number, optional): Filter for fields with a price greater than or equal to this value
+  - `max_price` (number, optional): Filter for fields with a price less than or equal to this value
+
+- **Example URL**: `GET /api/v1/fields?location=jakarta&min_price=100000&max_price=300000`
+
 - **Success Response** (`200 OK`):
   ```json
   [
@@ -276,11 +319,23 @@ Endpoints for retrieving and managing field information.
     }
   ]
   ```
+- **Error Response** (`500 Internal Server Error`):
+  ```json
+  {
+    "error": "Failed to retrieve fields"
+  }
+  ```
 
 #### 2. Get Field by ID
 
 - **Endpoint**: `GET /api/v1/fields/:id`
 - **Description**: Retrieves details for a specific field.
+- **Path Parameters**:
+
+  - `id` (string, required): UUID of the field
+
+- **Example URL**: `GET /api/v1/fields/c1f8e4d9-8a2b-4b6e-9c1d-5a8f8c7b6a5d`
+
 - **Success Response** (`200 OK`):
   ```json
   {
@@ -303,7 +358,9 @@ Endpoints for retrieving and managing field information.
 
 - **Endpoint**: `POST /api/v1/fields/admin`
 - **Authorization**: `Bearer <admin_access_token>`
+- **Description**: Creates a new field. Requires admin privileges.
 - **Request Body**:
+
   ```json
   {
     "name": "Lapangan Tennis Baru",
@@ -311,10 +368,17 @@ Endpoints for retrieving and managing field information.
     "price": 150000
   }
   ```
+
+  **Validation:**
+
+  - `name`: Required
+  - `location`: Required
+  - `price`: Required, must be a number
+
 - **Success Response** (`201 Created`):
   ```json
   {
-    "id": "...",
+    "id": "550e8400-e29b-41d4-a716-446655440001",
     "name": "Lapangan Tennis Baru",
     "location": "Bandung",
     "price": 150000,
@@ -322,11 +386,26 @@ Endpoints for retrieving and managing field information.
     "updated_at": "2024-01-01T00:00:00Z"
   }
   ```
+- **Error Response** (`403 Forbidden`):
+  ```json
+  {
+    "error": "Forbidden"
+  }
+  ```
+  **Other error responses:**
+  - `400`: Validation errors (e.g., missing required fields)
+  - `401`: Unauthorized (invalid or missing access token)
+  - `500`: Database error
 
 #### 4. Update Field (Admin Only)
 
 - **Endpoint**: `PUT /api/v1/fields/admin/:id`
 - **Authorization**: `Bearer <admin_access_token>`
+- **Description**: Updates an existing field. Requires admin privileges.
+- **Path Parameters**:
+
+  - `id` (string, required): UUID of the field to update
+
 - **Request Body**:
   ```json
   {
@@ -338,7 +417,7 @@ Endpoints for retrieving and managing field information.
 - **Success Response** (`200 OK`):
   ```json
   {
-    "id": "...",
+    "id": "550e8400-e29b-41d4-a716-446655440001",
     "name": "Lapangan Tennis Updated",
     "location": "Bandung Barat",
     "price": 175000,
@@ -346,17 +425,43 @@ Endpoints for retrieving and managing field information.
     "updated_at": "2024-01-02T00:00:00Z"
   }
   ```
+- **Error Response** (`404 Not Found`):
+  ```json
+  {
+    "error": "Field not found"
+  }
+  ```
+  **Other error responses:**
+  - `400`: Validation errors
+  - `401`: Unauthorized (invalid or missing access token)
+  - `403`: Forbidden (not admin)
+  - `500`: Database error
 
 #### 5. Delete Field (Admin Only)
 
 - **Endpoint**: `DELETE /api/v1/fields/admin/:id`
 - **Authorization**: `Bearer <admin_access_token>`
+- **Description**: Deletes a field. Requires admin privileges.
+- **Path Parameters**:
+
+  - `id` (string, required): UUID of the field to delete
+
 - **Success Response** (`200 OK`):
   ```json
   {
     "message": "Field deleted successfully"
   }
   ```
+- **Error Response** (`404 Not Found`):
+  ```json
+  {
+    "error": "Field not found"
+  }
+  ```
+  **Other error responses:**
+  - `401`: Unauthorized (invalid or missing access token)
+  - `403`: Forbidden (not admin)
+  - `500`: Database error
 
 ### 📅 Bookings
 
@@ -366,28 +471,40 @@ Endpoints for creating and managing user bookings.
 
 - **Endpoint**: `GET /api/v1/bookings`
 - **Authorization**: `Bearer <admin_access_token>`
-- **Description**: Retrieves a list of all bookings from all users.
+- **Description**: Retrieves a list of all bookings from all users. Requires admin privileges.
 - **Success Response** (`200 OK`):
   ```json
   [
     {
-      "id": "...",
-      "user_id": "...",
-      "field_id": "...",
+      "id": "550e8400-e29b-41d4-a716-446655440002",
+      "user_id": "550e8400-e29b-41d4-a716-446655440003",
+      "field_id": "c1f8e4d9-8a2b-4b6e-9c1d-5a8f8c7b6a5d",
       "start_time": "2024-09-15T10:00:00Z",
       "end_time": "2024-09-15T12:00:00Z",
       "status": "confirmed",
+      "payments": [],
       "created_at": "2024-09-15T09:00:00Z",
       "updated_at": "2024-09-15T09:30:00Z"
     }
   ]
   ```
+- **Error Response** (`403 Forbidden`):
+  ```json
+  {
+    "error": "Forbidden"
+  }
+  ```
+  **Other error responses:**
+  - `401`: Unauthorized (invalid or missing access token)
+  - `500`: Database error
 
 #### 2. Create a Booking
 
 - **Endpoint**: `POST /api/v1/bookings`
 - **Authorization**: `Bearer <user_access_token>`
+- **Description**: Creates a new booking for a field.
 - **Request Body**:
+
   ```json
   {
     "field_id": "c1f8e4d9-8a2b-4b6e-9c1d-5a8f8c7b6a5d",
@@ -395,15 +512,23 @@ Endpoints for creating and managing user bookings.
     "end_time": "2024-09-15T12:00:00Z"
   }
   ```
+
+  **Validation:**
+
+  - `field_id`: Required, must be valid UUID
+  - `start_time`: Required, must be valid ISO 8601 datetime, cannot be in the past
+  - `end_time`: Required, must be valid ISO 8601 datetime, must be after start_time
+
 - **Success Response** (`201 Created`):
   ```json
   {
-    "id": "...",
-    "user_id": "...",
+    "id": "550e8400-e29b-41d4-a716-446655440004",
+    "user_id": "550e8400-e29b-41d4-a716-446655440003",
     "field_id": "c1f8e4d9-8a2b-4b6e-9c1d-5a8f8c7b6a5d",
     "start_time": "2024-09-15T10:00:00Z",
     "end_time": "2024-09-15T12:00:00Z",
     "status": "pending",
+    "payments": [],
     "created_at": "2024-09-15T09:00:00Z",
     "updated_at": "2024-09-15T09:00:00Z"
   }
@@ -414,43 +539,60 @@ Endpoints for creating and managing user bookings.
     "error": "Field is already booked for this time slot"
   }
   ```
+  **Other error responses:**
+  - `400`: "Invalid field_id format", "Invalid booking time"
+  - `401`: Unauthorized
+  - `404`: "Field not found"
+  - `500`: "Failed to create booking"
 
 #### 3. Get My Bookings
 
 - **Endpoint**: `GET /api/v1/bookings/me`
 - **Authorization**: `Bearer <user_access_token>`
-- **Description**: Retrieves all bookings for the currently authenticated user.
+- **Description**: Retrieves all bookings for the currently authenticated user with related field and payment data.
 - **Success Response** (`200 OK`):
   ```json
   [
     {
-      "id": "...",
-      "user_id": "...",
-      "field_id": "...",
+      "id": "550e8400-e29b-41d4-a716-446655440004",
+      "user_id": "550e8400-e29b-41d4-a716-446655440003",
+      "field_id": "c1f8e4d9-8a2b-4b6e-9c1d-5a8f8c7b6a5d",
       "start_time": "2024-09-15T10:00:00Z",
       "end_time": "2024-09-15T12:00:00Z",
       "status": "confirmed",
       "created_at": "2024-09-15T09:00:00Z",
       "updated_at": "2024-09-15T09:30:00Z",
       "field": {
-        "id": "...",
+        "id": "c1f8e4d9-8a2b-4b6e-9c1d-5a8f8c7b6a5d",
         "name": "Lapangan Futsal A",
         "location": "Jakarta",
-        "price": 200000
+        "price": 200000,
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-01T00:00:00Z"
       },
       "payments": [
         {
-          "id": "...",
-          "booking_id": "...",
+          "id": "550e8400-e29b-41d4-a716-446655440005",
+          "booking_id": "550e8400-e29b-41d4-a716-446655440004",
           "amount": 200000,
           "currency": "idr",
           "status": "succeeded",
-          "stripe_ref_id": "cs_test_..."
+          "stripe_ref_id": "cs_test_...",
+          "created_at": "2024-09-15T09:15:00Z",
+          "updated_at": "2024-09-15T09:20:00Z"
         }
       ]
     }
   ]
   ```
+- **Error Response** (`401 Unauthorized`):
+  ```json
+  {
+    "error": "Unauthorized"
+  }
+  ```
+  **Other error responses:**
+  - `500`: "Failed to fetch bookings"
 
 #### 4. Cancel a Booking
 
@@ -482,16 +624,22 @@ Endpoints for handling payments with Stripe integration.
 - **Authorization**: `Bearer <user_access_token>`
 - **Description**: Creates a Stripe checkout session for a pending booking.
 - **Request Body**:
+
   ```json
   {
     "booking_id": "c1f8e4d9-8a2b-4b6e-9c1d-5a8f8c7b6a5d"
   }
   ```
+
+  **Validation:**
+
+  - `booking_id`: Required, must be valid UUID
+
 - **Success Response** (`200 OK`):
   ```json
   {
-    "session_id": "cs_test_...",
-    "session_url": "https://checkout.stripe.com/pay/cs_test_..."
+    "session_id": "cs_test_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6",
+    "session_url": "https://checkout.stripe.com/pay/cs_test_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6"
   }
   ```
 - **Error Response** (`400 Bad Request`):
@@ -500,12 +648,44 @@ Endpoints for handling payments with Stripe integration.
     "error": "Payment already exists for this booking"
   }
   ```
+  **Other error responses:**
+  - `400`: "Booking is not in pending status"
+  - `401`: "Unauthorized"
+  - `404`: "Booking not found or not authorized"
+  - `500`: Stripe API errors or "Failed to create payment record"
 
 #### 2. Stripe Webhook
 
 - **Endpoint**: `POST /api/v1/payments/stripe-webhook`
-- **Description**: Listens for events from Stripe to update payment and booking statuses. This is intended for Stripe to call, not the frontend.
-- **Note**: This endpoint requires proper Stripe signature verification.
+- **Description**: Handles Stripe webhook events to update payment and booking statuses. This endpoint is called by Stripe, not the frontend.
+- **Headers**:
+  - `Stripe-Signature`: Required for webhook verification
+- **Webhook Events Handled**:
+
+  - `checkout.session.completed`: Updates payment status to "succeeded" and booking status to "confirmed"
+  - `checkout.session.expired`: Updates payment status to "failed"
+  - `checkout.session.async_payment_failed`: Updates payment status to "failed"
+
+- **Success Response** (`200 OK`):
+  ```json
+  {
+    "status": "received"
+  }
+  ```
+- **Error Response** (`400 Bad Request`):
+
+  ```json
+  {
+    "error": "Invalid webhook signature"
+  }
+  ```
+
+  **Other error responses:**
+
+  - `400`: "Failed to read payload"
+  - `500`: "Failed to update payment status"
+
+- **Note**: This endpoint requires proper Stripe webhook signature verification and should be configured in your Stripe dashboard.
 
 ---
 
@@ -625,7 +805,7 @@ curl -X POST http://localhost:8080/api/v1/auth/register \
   }'
 ```
 
-**Login:**
+**Login with admin:**
 
 ```bash
 curl -X POST http://localhost:8080/api/v1/auth/login \
@@ -636,13 +816,30 @@ curl -X POST http://localhost:8080/api/v1/auth/login \
   }'
 ```
 
+**Login with regular user:**
+
+```bash
+curl -X POST http://localhost:8080/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@user.com",
+    "password": "password123"
+  }'
+```
+
 **Get all fields:**
 
 ```bash
 curl -X GET http://localhost:8080/api/v1/fields
 ```
 
-**Create a booking (requires authentication):**
+**Get fields with filters:**
+
+```bash
+curl -X GET "http://localhost:8080/api/v1/fields?location=jakarta&min_price=100000&max_price=300000"
+```
+
+**Create a booking (requires user authentication):**
 
 ```bash
 curl -X POST http://localhost:8080/api/v1/bookings \
@@ -655,43 +852,80 @@ curl -X POST http://localhost:8080/api/v1/bookings \
   }'
 ```
 
-## ��� Database Schema
+**Get my bookings:**
+
+```bash
+curl -X GET http://localhost:8080/api/v1/bookings/me \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+**Create payment session:**
+
+```bash
+curl -X POST http://localhost:8080/api/v1/payments/create-checkout-session \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d '{
+    "booking_id": "BOOKING_UUID"
+  }'
+```
+
+**Refresh token:**
+
+```bash
+curl -X POST http://localhost:8080/api/v1/auth/refresh \
+  -H "Content-Type: application/json" \
+  -d '{
+    "refresh_token": "YOUR_REFRESH_TOKEN"
+  }'
+```
+
+## 📊 Database Schema
 
 ### Users Table
 
 - `id` (UUID, Primary Key)
-- `name` (VARCHAR)
-- `email` (VARCHAR, Unique)
-- `password` (VARCHAR, Hashed)
-- `role` (VARCHAR: 'user' | 'admin')
-- `created_at`, `updated_at` (Timestamps)
+- `name` (VARCHAR, Not Null)
+- `email` (VARCHAR, Not Null, Unique)
+- `password` (VARCHAR, Not Null, Hashed with bcrypt)
+- `role` (VARCHAR, Not Null, Default: 'user') - Values: 'user' | 'admin'
+- `creadted_at` (TIMESTAMP) - Note: typo in model, should be created_at
 
 ### Fields Table
 
 - `id` (UUID, Primary Key)
-- `name` (VARCHAR)
-- `location` (VARCHAR)
-- `price` (DECIMAL)
-- `created_at`, `updated_at` (Timestamps)
+- `name` (VARCHAR(100), Not Null)
+- `location` (VARCHAR(255), Not Null)
+- `price` (DECIMAL/FLOAT, Not Null) - Price in IDR
+- `created_at`, `updated_at` (TIMESTAMP)
 
 ### Bookings Table
 
 - `id` (UUID, Primary Key)
-- `user_id` (UUID, Foreign Key)
-- `field_id` (UUID, Foreign Key)
-- `start_time`, `end_time` (TIMESTAMP)
-- `status` (VARCHAR: 'pending' | 'confirmed' | 'cancelled')
-- `created_at`, `updated_at` (Timestamps)
+- `user_id` (UUID, Foreign Key → users.id)
+- `field_id` (UUID, Foreign Key → fields.id)
+- `start_time` (TIMESTAMP)
+- `end_time` (TIMESTAMP)
+- `status` (VARCHAR) - Values: 'pending' | 'confirmed' | 'cancelled'
+- `created_at`, `updated_at` (TIMESTAMP)
 
 ### Payments Table
 
 - `id` (UUID, Primary Key)
-- `booking_id` (UUID, Foreign Key)
-- `amount` (DECIMAL)
-- `currency` (VARCHAR: 'idr')
-- `status` (VARCHAR: 'pending' | 'succeeded' | 'failed' | 'refunded')
-- `stripe_ref_id` (VARCHAR)
-- `created_at`, `updated_at` (Timestamps)
+- `booking_id` (UUID, Foreign Key → bookings.id)
+- `amount` (DECIMAL/FLOAT) - Amount in IDR
+- `currency` (VARCHAR) - Default: 'idr'
+- `status` (VARCHAR) - Values: 'pending' | 'succeeded' | 'failed' | 'refunded'
+- `stripe_ref_id` (VARCHAR) - Stripe session ID or payment intent ID
+- `created_at`, `updated_at` (TIMESTAMP)
+
+### Relationships
+
+- **User → Bookings**: One-to-Many (a user can have multiple bookings)
+- **Field → Bookings**: One-to-Many (a field can have multiple bookings)
+- **Booking → Payments**: One-to-Many (a booking can have multiple payment attempts)
+- **Booking → User**: Many-to-One (with Preload support)
+- **Booking → Field**: Many-to-One (with Preload support)
 
 ## ��� Contributing
 
