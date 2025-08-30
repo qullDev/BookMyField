@@ -71,11 +71,11 @@ func CreateCheckoutSession(c *gin.Context) {
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{
 				PriceData: &stripe.CheckoutSessionLineItemPriceDataParams{
-					Currency: stripe.String("idr"), // Changed to IDR
+					Currency: stripe.String("usd"), // Use USD for Stripe compatibility
 					ProductData: &stripe.CheckoutSessionLineItemPriceDataProductDataParams{
-						Name: stripe.String(booking.Field.Name),
+						Name: stripe.String(booking.Field.Name + " - Field Booking"),
 					},
-					UnitAmount: stripe.Int64(int64(booking.Field.Price)), // IDR doesn't need * 100
+					UnitAmount: stripe.Int64(100), // Fixed $1.00 USD for testing (minimum amount)
 				},
 				Quantity: stripe.Int64(1),
 			},
