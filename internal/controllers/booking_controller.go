@@ -32,7 +32,11 @@ type CreateBookingInput struct {
 // @Router /bookings [get]
 func GetBookings(c *gin.Context) {
 	var bookings []models.Booking
-	if err := config.DB.Find(&bookings).Error; err != nil {
+	if err := config.DB.
+		Preload("User").
+		Preload("Field").
+		Preload("Payments").
+		Find(&bookings).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -115,6 +119,16 @@ func CreateBooking(c *gin.Context) {
 
 	if err := config.DB.Create(&booking).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create booking"})
+		return
+	}
+
+	// Preload relasi untuk response
+	if err := config.DB.
+		Preload("User").
+		Preload("Field").
+		Preload("Payments").
+		First(&booking, "id = ?", booking.ID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve booking details"})
 		return
 	}
 

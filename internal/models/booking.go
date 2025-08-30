@@ -10,10 +10,10 @@ import (
 type Booking struct {
 	ID     uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
 	UserID uuid.UUID `gorm:"type:uuid;not null" json:"user_id"`
-	User   User      `gorm:"foreignKey:UserID"`
+	User   User      `gorm:"foreignKey:UserID" json:"user"`
 
 	FieldID uuid.UUID `gorm:"type:uuid;not null" json:"field_id"`
-	Field   Field     `gorm:"foreignKey:FieldID"`
+	Field   Field     `gorm:"foreignKey:FieldID" json:"field"`
 
 	StartTime time.Time `json:"start_time"`
 	EndTime   time.Time `json:"end_time"`
