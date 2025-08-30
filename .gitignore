@@ -3,3 +3,5 @@
 cmd/api/tmp
 
 bookmyfield.db
+
+tools/
