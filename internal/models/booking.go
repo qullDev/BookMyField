@@ -18,6 +18,7 @@ type Booking struct {
 	StartTime time.Time `json:"start_time"`
 	EndTime   time.Time `json:"end_time"`
 	Status    string    `json:"status"` // pending, confirmed, canceled
+	Notes     string    `json:"notes,omitempty"`
 
 	Payments []Payment `gorm:"foreignKey:BookingID" json:"payments"`
 

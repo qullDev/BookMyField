@@ -17,6 +17,7 @@ type CreateBookingInput struct {
 	FieldID   string    `json:"field_id" binding:"required"`
 	StartTime time.Time `json:"start_time" binding:"required"`
 	EndTime   time.Time `json:"end_time" binding:"required"`
+	Notes     string    `json:"notes,omitempty"`
 }
 
 // GetBookings godoc
@@ -115,6 +116,7 @@ func CreateBooking(c *gin.Context) {
 		StartTime: input.StartTime,
 		EndTime:   input.EndTime,
 		Status:    "pending",
+		Notes:     input.Notes,
 	}
 
 	if err := config.DB.Create(&booking).Error; err != nil {
