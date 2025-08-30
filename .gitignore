@@ -1,3 +1,5 @@
 .idea
 .env
 cmd/api/tmp
+
+bookmyfield.db
