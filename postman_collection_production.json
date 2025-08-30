@@ -603,9 +603,9 @@
               "raw": "{\n    \"booking_id\": \"{{booking_id}}\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/v1/checkout",
+              "raw": "{{base_url}}/api/v1/payments/create-checkout-session",
               "host": ["{{base_url}}"],
-              "path": ["api", "v1", "checkout"]
+              "path": ["api", "v1", "payments", "create-checkout-session"]
             }
           }
         },

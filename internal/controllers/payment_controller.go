@@ -80,8 +80,8 @@ func CreateCheckoutSession(c *gin.Context) {
 				Quantity: stripe.Int64(1),
 			},
 		},
-		SuccessURL: stripe.String("http://localhost:3000/success"),
-		CancelURL:  stripe.String("http://localhost:3000/cancel"),
+		SuccessURL: stripe.String("https://bookmyfield-production.up.railway.app/success?session_id={CHECKOUT_SESSION_ID}"),
+		CancelURL:  stripe.String("https://bookmyfield-production.up.railway.app/cancel"),
 		Metadata: map[string]string{
 			"booking_id": booking.ID.String(),
 		},

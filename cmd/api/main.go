@@ -42,7 +42,7 @@ func main() {
 	config.InitRedis()
 	config.InitStripe()
 
-	err := config.DB.AutoMigrate(&models.User{}, &models.Field{}, &models.Booking{})
+	err := config.DB.AutoMigrate(&models.User{}, &models.Field{}, &models.Booking{}, &models.Payment{})
 	if err != nil {
 		log.Fatal("Error migrating database:", err.Error())
 		return

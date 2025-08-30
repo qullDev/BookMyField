@@ -7,9 +7,12 @@ import (
 )
 
 func PaymentRoutes(api *gin.RouterGroup) {
-	// Checkout endpoint requires authentication
-	api.POST("/checkout", middlewares.AuthMiddleware(), controllers.CreateCheckoutSession)
+	payment := api.Group("/payments")
+	{
+		// Checkout endpoint requires authentication
+		payment.POST("/create-checkout-session", middlewares.AuthMiddleware(), controllers.CreateCheckoutSession)
 
-	// Webhook endpoint tidak perlu authentication (dipanggil oleh Stripe)
-	api.POST("/webhook", controllers.StripeWebhook)
+		// Webhook endpoint tidak perlu authentication (dipanggil oleh Stripe)
+		payment.POST("/stripe-webhook", controllers.StripeWebhook)
+	}
 }
