@@ -171,3 +171,93 @@ func StripeWebhook(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"status": "received"})
 }
+
+// GetPayments godoc
+// @Summary Get all payments for admin
+// @Description Get all payments with booking and user details (admin only).
+// @Tags payments
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {array} models.Payment
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 403 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /payments [get]
+func GetPayments(c *gin.Context) {
+	var payments []models.Payment
+	if err := config.DB.Preload("Booking.User").Preload("Booking.Field").Find(&payments).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch payments"})
+		return
+	}
+
+	c.JSON(http.StatusOK, payments)
+}
+
+// GetMyPayments godoc
+// @Summary Get user's payments
+// @Description Get all payments for the authenticated user.
+// @Tags payments
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {array} models.Payment
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /payments/me [get]
+func GetMyPayments(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	var payments []models.Payment
+	if err := config.DB.Preload("Booking.User").Preload("Booking.Field").
+		Joins("JOIN bookings ON payments.booking_id = bookings.id").
+		Where("bookings.user_id = ?", userID).
+		Find(&payments).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch payments"})
+		return
+	}
+
+	c.JSON(http.StatusOK, payments)
+}
+
+// GetPaymentByID godoc
+// @Summary Get payment by ID
+// @Description Get payment details by payment ID.
+// @Tags payments
+// @Security BearerAuth
+// @Produce json
+// @Param id path string true "Payment ID"
+// @Success 200 {object} models.Payment
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /payments/{id} [get]
+func GetPaymentByID(c *gin.Context) {
+	paymentID := c.Param("id")
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	var payment models.Payment
+	query := config.DB.Preload("Booking.User").Preload("Booking.Field").
+		Joins("JOIN bookings ON payments.booking_id = bookings.id").
+		Where("payments.id = ?", paymentID)
+
+	// Check user role
+	role, roleExists := c.Get("role")
+	if !roleExists || role != "admin" {
+		// If not admin, only allow access to own payments
+		query = query.Where("bookings.user_id = ?", userID)
+	}
+
+	if err := query.First(&payment).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Payment not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, payment)
+}
