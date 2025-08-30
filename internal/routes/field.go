@@ -7,15 +7,13 @@ import (
 )
 
 func FieldRoutes(rg *gin.RouterGroup) {
-	// Public endpoints (no authentication required)
-	fields := rg.Group("/fields")
+	field := rg.Group("/fields", middlewares.AuthMiddleware())
 	{
-		fields.GET("/", controllers.GetFields)
-		fields.GET("/:id", controllers.GetFieldByID)
+		field.GET("/", controllers.GetFields)
+		field.GET("/:id", controllers.GetFieldByID)
 	}
 
-	// Admin-only endpoints (authentication + admin role required)
-	admin := rg.Group("/fields/admin", middlewares.AuthMiddleware(), middlewares.AdminOnly())
+	admin := field.Group("/admin", middlewares.AdminOnly())
 	{
 		admin.POST("/", controllers.CreateField)
 		admin.DELETE("/:id", controllers.DeleteField)

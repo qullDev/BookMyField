@@ -115,10 +115,12 @@ func Login(c *gin.Context) {
 
 	// Generate refresh token
 	refreshToken := uuid.NewString()
-	err = config.RedisClient.Set(config.Ctx, "refresh:"+refreshToken, user.ID.String(), time.Hour*24*7).Err()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to store refresh token"})
-		return
+	if config.RedisClient != nil {
+		err = config.RedisClient.Set(config.Ctx, "refresh:"+refreshToken, user.ID.String(), time.Hour*24*7).Err()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to store refresh token"})
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -154,11 +156,13 @@ func Logout(c *gin.Context) {
 	}
 
 	// hapus refresh token dari Redis
-	config.RedisClient.Del(config.Ctx, "refresh:"+body.RefreshToken)
+	if config.RedisClient != nil {
+		config.RedisClient.Del(config.Ctx, "refresh:"+body.RefreshToken)
+	}
 
 	// blacklist access token sampai expired
 	claims, err := config.ParseAccessToken(tokenString)
-	if err == nil {
+	if err == nil && config.RedisClient != nil {
 		exp := claims.ExpiresAt.Time.Sub(time.Now())
 		config.RedisClient.Set(config.Ctx, "blacklist:"+tokenString, "1", exp)
 	}
@@ -188,6 +192,11 @@ func Refresh(c *gin.Context) {
 	}
 
 	// Check refresh token in Redis
+	if config.RedisClient == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Redis not available"})
+		return
+	}
+
 	userID, err := config.RedisClient.Get(config.Ctx, "refresh:"+body.RefreshToken).Result()
 	if err != nil || userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Refresh token revoked or expired"})
