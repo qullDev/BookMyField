@@ -71,11 +71,11 @@ func CreateCheckoutSession(c *gin.Context) {
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{
 				PriceData: &stripe.CheckoutSessionLineItemPriceDataParams{
-					Currency: stripe.String("idr"), // Changed to IDR
+					Currency: stripe.String("usd"), // Use USD for Stripe compatibility
 					ProductData: &stripe.CheckoutSessionLineItemPriceDataProductDataParams{
-						Name: stripe.String(booking.Field.Name),
+						Name: stripe.String(booking.Field.Name + " - Field Booking"),
 					},
-					UnitAmount: stripe.Int64(int64(booking.Field.Price)), // IDR doesn't need * 100
+					UnitAmount: stripe.Int64(int64(booking.Field.Price / 100)), // Convert IDR to USD cents (approx 1 USD = 15000 IDR)
 				},
 				Quantity: stripe.Int64(1),
 			},
@@ -97,8 +97,8 @@ func CreateCheckoutSession(c *gin.Context) {
 	payment := models.Payment{
 		ID:          uuid.New(),
 		BookingID:   booking.ID,
-		Amount:      booking.Field.Price,
-		Currency:    "idr", // Changed to IDR
+		Amount:      booking.Field.Price, // Keep original IDR amount in database
+		Currency:    "idr",               // Keep IDR for local records
 		Status:      "pending",
 		StripeRefID: s.ID, // Use session ID for webhook matching
 	}
