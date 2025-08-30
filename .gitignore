@@ -5,3 +5,5 @@ cmd/api/tmp
 bookmyfield.db
 
 tools/
+
+main.exe
