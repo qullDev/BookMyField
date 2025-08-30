@@ -8,8 +8,10 @@
 - 🔓 Otorisasi dengan RBAC (Role Based Access Control) (ADMIN, USER)
 - 🏟️ Manajemen lapangan olahraga (CRUD operations)
 - 📅 Sistem booking real-time dengan validasi tanggal/waktu
-- 💳 Integrasi pembayaran dengan Stripe Payment Gateway (IDR support)
+- 💳 Integrasi pembayaran dengan Stripe Payment Gateway (USD support)
 - 🎣 Implementasi webhook Stripe untuk payment status update otomatis
+- 💰 Manajemen payment lengkap dengan history dan tracking
+- 📊 Payment endpoints untuk admin dan user dashboard
 - 📄 Dokumentasi standar OpenAPI dengan Swagger UI
 - ✅ Validasi data komprehensif dan error handling
 - 🔒 JWT token blacklisting untuk keamanan ekstra
@@ -24,6 +26,8 @@
 - Track booking history pengguna
 - Pembatalan booking dengan refund otomatis
 - Payment processing dan webhook handling
+- Payment history dan tracking untuk user dan admin
+- Success/cancel pages untuk payment redirect
 - Health check endpoint
 
 **Default Credentials:**
@@ -57,7 +61,9 @@ Dokumentasi API lengkap tersedia melalui Swagger UI:
 - **🔐 User Authentication**: Secure registration and login with JWT tokens
 - **🏟️ Field Management**: Admins can create, update, and delete field information
 - **📅 Booking System**: Users can book fields, view their booking history, and cancel bookings
-- **💳 Payment Integration**: Seamless payment processing via Stripe with IDR support
+- **💳 Payment Integration**: Seamless payment processing via Stripe with USD support
+- **💰 Payment Management**: Complete payment tracking, history, and admin oversight
+- **🎯 Payment Success/Cancel Pages**: User-friendly redirect pages after payment
 - **👥 Role-Based Access Control**: Differentiated access for regular users and administrators
 - **🔒 Security**: JWT blacklisting, input validation, and proper error handling
 - **📊 Filtering**: Advanced field filtering by location and price range
@@ -67,7 +73,7 @@ Dokumentasi API lengkap tersedia melalui Swagger UI:
 - **Backend**: Go (Golang) v1.24+ with Gin framework
 - **Database**: PostgreSQL with GORM (SQLite fallback for development)
 - **Cache**: Redis for JWT token blacklisting and session management
-- **Payments**: Stripe API with webhook support (IDR currency)
+- **Payments**: Stripe API with webhook support (USD currency)
 - **API Documentation**: Swagger/OpenAPI 3.0 with interactive UI
 - **Authentication**: JWT with access & refresh tokens
 - **Validation**: Gin validator with comprehensive input validation
@@ -687,6 +693,168 @@ Endpoints for handling payments with Stripe integration.
 
 - **Note**: This endpoint requires proper Stripe webhook signature verification and should be configured in your Stripe dashboard.
 
+#### 3. Get All Payments (Admin Only)
+
+- **Endpoint**: `GET /api/v1/payments/`
+- **Authorization**: `Bearer <admin_access_token>`
+- **Description**: Retrieves all payments in the system with complete booking, user, and field details. Admin access only.
+- **Success Response** (`200 OK`):
+  ```json
+  [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440005",
+      "booking_id": "550e8400-e29b-41d4-a716-446655440004",
+      "amount": 10000,
+      "currency": "idr",
+      "status": "succeeded",
+      "stripe_ref_id": "cs_test_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6",
+      "created_at": "2024-09-15T09:15:00Z",
+      "updated_at": "2024-09-15T09:20:00Z",
+      "Booking": {
+        "id": "550e8400-e29b-41d4-a716-446655440004",
+        "user": {
+          "id": "550e8400-e29b-41d4-a716-446655440003",
+          "name": "John Doe",
+          "email": "john@example.com",
+          "role": "user"
+        },
+        "field": {
+          "id": "c1f8e4d9-8a2b-4b6e-9c1d-5a8f8c7b6a5d",
+          "name": "Lapangan Futsal A",
+          "location": "Jakarta",
+          "price": 10000
+        },
+        "start_time": "2024-09-15T10:00:00Z",
+        "end_time": "2024-09-15T12:00:00Z",
+        "status": "confirmed",
+        "notes": "Booking untuk latihan tim"
+      }
+    }
+  ]
+  ```
+- **Error Response** (`403 Forbidden`):
+  ```json
+  {
+    "error": "Forbidden"
+  }
+  ```
+
+#### 4. Get My Payments
+
+- **Endpoint**: `GET /api/v1/payments/me`
+- **Authorization**: `Bearer <user_access_token>`
+- **Description**: Retrieves all payments for the authenticated user with booking and field details.
+- **Success Response** (`200 OK`):
+  ```json
+  [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440005",
+      "booking_id": "550e8400-e29b-41d4-a716-446655440004",
+      "amount": 10000,
+      "currency": "idr",
+      "status": "succeeded",
+      "stripe_ref_id": "cs_test_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6",
+      "created_at": "2024-09-15T09:15:00Z",
+      "updated_at": "2024-09-15T09:20:00Z",
+      "Booking": {
+        "user": {
+          "id": "550e8400-e29b-41d4-a716-446655440003",
+          "name": "John Doe",
+          "email": "john@example.com",
+          "role": "user"
+        },
+        "field": {
+          "id": "c1f8e4d9-8a2b-4b6e-9c1d-5a8f8c7b6a5d",
+          "name": "Lapangan Futsal A",
+          "location": "Jakarta",
+          "price": 10000
+        },
+        "start_time": "2024-09-15T10:00:00Z",
+        "end_time": "2024-09-15T12:00:00Z",
+        "status": "confirmed"
+      }
+    }
+  ]
+  ```
+- **Error Response** (`401 Unauthorized`):
+  ```json
+  {
+    "error": "Unauthorized"
+  }
+  ```
+
+#### 5. Get Payment by ID
+
+- **Endpoint**: `GET /api/v1/payments/:id`
+- **Authorization**: `Bearer <access_token>`
+- **Description**: Retrieves specific payment details. Users can only access their own payments, admins can access all payments.
+- **Path Parameters**:
+  - `id` (string, required): UUID of the payment
+- **Success Response** (`200 OK`):
+  ```json
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440005",
+    "booking_id": "550e8400-e29b-41d4-a716-446655440004",
+    "amount": 10000,
+    "currency": "idr",
+    "status": "succeeded",
+    "stripe_ref_id": "cs_test_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6",
+    "created_at": "2024-09-15T09:15:00Z",
+    "updated_at": "2024-09-15T09:20:00Z",
+    "Booking": {
+      "user": {
+        "id": "550e8400-e29b-41d4-a716-446655440003",
+        "name": "John Doe",
+        "email": "john@example.com",
+        "role": "user"
+      },
+      "field": {
+        "id": "c1f8e4d9-8a2b-4b6e-9c1d-5a8f8c7b6a5d",
+        "name": "Lapangan Futsal A",
+        "location": "Jakarta",
+        "price": 10000
+      },
+      "start_time": "2024-09-15T10:00:00Z",
+      "end_time": "2024-09-15T12:00:00Z",
+      "status": "confirmed"
+    }
+  }
+  ```
+- **Error Response** (`404 Not Found`):
+  ```json
+  {
+    "error": "Payment not found"
+  }
+  ```
+
+#### 6. Payment Success Page
+
+- **Endpoint**: `GET /success?session_id={session_id}`
+- **Description**: Redirect page after successful Stripe payment. Returns success message with session details.
+- **Query Parameters**:
+  - `session_id` (string, optional): Stripe checkout session ID
+- **Success Response** (`200 OK`):
+  ```json
+  {
+    "status": "success",
+    "message": "🎉 Payment completed successfully!",
+    "session_id": "cs_test_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6",
+    "next_steps": "Your booking has been confirmed. Check your bookings in the app."
+  }
+  ```
+
+#### 7. Payment Cancel Page
+
+- **Endpoint**: `GET /cancel`
+- **Description**: Redirect page when payment is cancelled by user.
+- **Success Response** (`200 OK`):
+  ```json
+  {
+    "status": "cancelled",
+    "message": "❌ Payment was cancelled. You can try again anytime."
+  }
+  ```
+
 ---
 
 ## 🏗️ Project Structure
@@ -758,6 +926,29 @@ STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
 PORT=8080
 ```
 
+## 🔐 Authentication
+
+All protected endpoints require a JWT token in the Authorization header:
+
+```bash
+Authorization: Bearer <your_jwt_token>
+```
+
+### Get Access Token
+
+```bash
+curl -X POST "https://bookmyfield-production.up.railway.app/api/auth/login"
+  -H "Content-Type: application/json"
+  -d '{
+    "email": "admin@test.com",
+    "password": "admin123"
+  }'
+```
+
+## 🚨 Error Handling
+
+````
+
 ## ��� Error Handling
 
 The API uses conventional HTTP response codes to indicate the success or failure of requests:
@@ -777,7 +968,7 @@ The API uses conventional HTTP response codes to indicate the success or failure
 {
   "error": "Descriptive error message"
 }
-```
+````
 
 ## ��� Security Features
 
@@ -808,13 +999,62 @@ curl -X POST http://localhost:8080/api/v1/auth/register \
 **Login with admin:**
 
 ```bash
-curl -X POST http://localhost:8080/api/v1/auth/login \
+curl -X POST "https://bookmyfield-production.up.railway.app/api/auth/login" \
   -H "Content-Type: application/json" \
   -d '{
-    "email": "admin@admin.com",
-    "password": "password123"
+    "email": "admin@test.com",
+    "password": "admin123"
   }'
 ```
+
+**Create a booking:**
+
+```bash
+curl -X POST "https://bookmyfield-production.up.railway.app/api/bookings" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <your_jwt_token>" \
+  -d '{
+    "field_id": "field-uuid-here",
+    "date": "2024-01-15",
+    "start_time": "10:00",
+    "end_time": "12:00",
+    "notes": "Weekly practice session"
+  }'
+```
+
+**Create payment checkout session:**
+
+```bash
+curl -X POST "https://bookmyfield-production.up.railway.app/api/payments/create-checkout-session" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <your_jwt_token>" \
+  -d '{
+    "booking_id": "booking-uuid-here"
+  }'
+```
+
+**Get user payment history:**
+
+```bash
+curl -X GET "https://bookmyfield-production.up.railway.app/api/payments/my-payments" \
+  -H "Authorization: Bearer <your_jwt_token>"
+```
+
+**Admin - Get all payments:**
+
+```bash
+curl -X GET "https://bookmyfield-production.up.railway.app/api/admin/payments" \
+  -H "Authorization: Bearer <admin_jwt_token>"
+```
+
+curl -X POST http://localhost:8080/api/v1/auth/login \
+ -H "Content-Type: application/json" \
+ -d '{
+"email": "admin@admin.com",
+"password": "password123"
+}'
+
+````
 
 **Login with regular user:**
 
@@ -825,7 +1065,7 @@ curl -X POST http://localhost:8080/api/v1/auth/login \
     "email": "user@user.com",
     "password": "password123"
   }'
-```
+````
 
 **Get all fields:**
 
@@ -841,44 +1081,59 @@ curl -X GET "http://localhost:8080/api/v1/fields?location=jakarta&min_price=1000
 
 **Create a booking (requires user authentication):**
 
-```bash
-curl -X POST http://localhost:8080/api/v1/bookings \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-  -d '{
-    "field_id": "FIELD_UUID",
-    "start_time": "2024-09-15T10:00:00Z",
-    "end_time": "2024-09-15T12:00:00Z"
-  }'
-```
+### Using Postman
 
-**Get my bookings:**
+1. Import the Postman collection from `postman_collection_production.json`
+2. Import the environment from `postman_environment_production.json`
+3. Run the "Login" request to authenticate
+4. The access token will be automatically saved for subsequent requests
 
-```bash
-curl -X GET http://localhost:8080/api/v1/bookings/me \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
-```
+For detailed testing guides, see:
 
-**Create payment session:**
+- [Payment Testing Guide](PAYMENT_TESTING_GUIDE.md)
+- [Postman Production Guide](POSTMAN_PRODUCTION_GUIDE.md)
+- [Payment Endpoints Guide](PAYMENT_ENDPOINTS_GUIDE.md)
 
-```bash
-curl -X POST http://localhost:8080/api/v1/payments/create-checkout-session \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-  -d '{
-    "booking_id": "BOOKING_UUID"
-  }'
-```
+## 📚 Additional Documentation
 
-**Refresh token:**
+- [Payment Testing Guide](PAYMENT_TESTING_GUIDE.md) - Complete payment flow testing
+- [Stripe Setup Guide](STRIPE_SETUP_GUIDE.md) - Stripe configuration
+- [Postman Guide](POSTMAN_GUIDE.md) - API testing with Postman
+- [Payment Endpoints Guide](PAYMENT_ENDPOINTS_GUIDE.md) - Payment API reference
 
-```bash
-curl -X POST http://localhost:8080/api/v1/auth/refresh \
-  -H "Content-Type: application/json" \
-  -d '{
-    "refresh_token": "YOUR_REFRESH_TOKEN"
-  }'
-```
+## 💳 Payment Flow
+
+1. **Create Booking** - User creates a booking for a field
+2. **Initiate Payment** - User creates a Stripe checkout session
+3. **Complete Payment** - User completes payment on Stripe
+4. **Webhook Processing** - Stripe webhook updates payment status
+5. **View History** - User can view payment history and details
+
+## 🚀 Production Deployment
+
+The API is deployed on Railway at:
+**https://bookmyfield-production.up.railway.app**
+
+### Database Schema
+
+The application uses PostgreSQL with the following main tables:
+
+- `users` - User accounts with role-based access
+- `fields` - Sports field listings with pricing
+- `bookings` - Field reservations with time slots
+- `payments` - Payment records with Stripe integration
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new features
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 📊 Database Schema
 
