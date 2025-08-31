@@ -628,9 +628,9 @@
               "raw": "{\n    \"type\": \"checkout.session.completed\",\n    \"data\": {\n        \"object\": {\n            \"id\": \"cs_test_123\",\n            \"metadata\": {\n                \"booking_id\": \"{{booking_id}}\"\n            }\n        }\n    }\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/v1/webhook",
+              "raw": "{{base_url}}/api/v1/payments/stripe-webhook",
               "host": ["{{base_url}}"],
-              "path": ["api", "v1", "webhook"]
+              "path": ["api", "v1", "payments", "stripe-webhook"]
             }
           }
         },
