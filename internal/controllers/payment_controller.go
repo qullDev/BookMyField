@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"os"
 
@@ -165,6 +166,96 @@ func StripeWebhook(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": "received"})
+}
+
+// StripeWebhookTest godoc
+// @Summary Test Stripe webhook (Development only)
+// @Description Test webhook endpoint without signature validation for development/testing purposes.
+// @Tags payments
+// @Accept json
+// @Produce json
+// @Param webhook_data body object true "Test webhook payload"
+// @Success 200 {object} object
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /payments/stripe-webhook-test [post]
+func StripeWebhookTest(c *gin.Context) {
+	var payload map[string]interface{}
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON payload"})
+		return
+	}
+
+	// Log payload untuk debugging
+	log.Printf("Test webhook received: %+v", payload)
+
+	// Simulasi pemrosesan event
+	eventType, exists := payload["type"].(string)
+	if !exists {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing event type"})
+		return
+	}
+
+	switch eventType {
+	case "checkout.session.completed":
+		// Simulasi update payment status
+		if data, ok := payload["data"].(map[string]interface{}); ok {
+			if object, ok := data["object"].(map[string]interface{}); ok {
+				sessionID, _ := object["id"].(string)
+
+				// Update payment status
+				result := config.DB.Model(&models.Payment{}).
+					Where("stripe_ref_id = ?", sessionID).
+					Update("status", "succeeded")
+
+				if result.Error != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update payment status"})
+					return
+				}
+
+				// Update booking status jika ada metadata
+				if metadata, ok := object["metadata"].(map[string]interface{}); ok {
+					if bookingID, ok := metadata["booking_id"].(string); ok {
+						config.DB.Model(&models.Booking{}).
+							Where("id = ?", bookingID).
+							Update("status", "confirmed")
+					}
+				}
+
+				c.JSON(http.StatusOK, gin.H{
+					"status":     "test webhook processed",
+					"event_type": eventType,
+					"session_id": sessionID,
+				})
+				return
+			}
+		}
+
+	case "checkout.session.expired", "checkout.session.async_payment_failed":
+		// Simulasi payment failed
+		if data, ok := payload["data"].(map[string]interface{}); ok {
+			if object, ok := data["object"].(map[string]interface{}); ok {
+				sessionID, _ := object["id"].(string)
+
+				config.DB.Model(&models.Payment{}).
+					Where("stripe_ref_id = ?", sessionID).
+					Update("status", "failed")
+
+				c.JSON(http.StatusOK, gin.H{
+					"status":     "test webhook processed",
+					"event_type": eventType,
+					"session_id": sessionID,
+				})
+				return
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":     "test webhook received",
+		"event_type": eventType,
+		"note":       "Event type not handled in test mode",
+	})
 }
 
 // GetPayments godoc

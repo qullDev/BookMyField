@@ -11,6 +11,9 @@ func PaymentRoutes(api *gin.RouterGroup) {
 	// Harus di luar tanpa middalware auth
 	api.POST("/payments/stripe-webhook", controllers.StripeWebhook)
 
+	// Test webhook endpoint untuk development (no signature validation)
+	api.POST("/payments/stripe-webhook-test", controllers.StripeWebhookTest)
+
 	payment := api.Group("/payments")
 	{
 		// Create checkout session (requires authentication)
