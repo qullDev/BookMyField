@@ -693,6 +693,30 @@ Endpoints for handling payments with Stripe integration.
 
 - **Note**: This endpoint requires proper Stripe webhook signature verification and should be configured in your Stripe dashboard.
 
+#### 2b. Stripe Webhook Test (Development)
+
+- **Endpoint**: `POST /api/v1/payments/stripe-webhook-test`
+- **Description**: Test webhook endpoint without signature validation for development/testing purposes.
+- **Authorization**: None required
+- **Request Body**: Same format as production webhook but without signature validation
+- **Example**:
+  ```json
+  {
+    "type": "checkout.session.completed",
+    "data": {
+      "object": {
+        "id": "cs_test_session_123",
+        "metadata": {
+          "booking_id": "booking-uuid-here"
+        }
+      }
+    }
+  }
+  ```
+- **Response**:
+  - `200`: `{"status": "test webhook processed", "event_type": "checkout.session.completed"}`
+  - `400`: "Invalid JSON payload" or "Missing event type"
+
 #### 3. Get All Payments (Admin Only)
 
 - **Endpoint**: `GET /api/v1/payments/`
