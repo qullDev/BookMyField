@@ -143,6 +143,8 @@ definitions:
         type: string
       id:
         type: string
+      notes:
+        type: string
       payments:
         items:
           $ref: '#/definitions/models.Payment'
@@ -199,7 +201,7 @@ definitions:
     type: object
   models.User:
     properties:
-      creadtedAt:
+      created_at:
         type: string
       email:
         type: string
@@ -207,23 +209,22 @@ definitions:
         type: string
       name:
         type: string
-      password:
-        type: string
       role:
         description: user or admin
+        type: string
+      updated_at:
         type: string
     type: object
 host: localhost:8080
 info:
   contact:
-    email: admin@bookmyfield.com
-    name: qullDev
-    url: https://github.com/qullDev
-  description: API backend untuk sistem booking lapangan olahraga. Menyediakan endpoints
-    untuk autentikasi, manajemen lapangan, booking, dan pembayaran.
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is a server for BookMyField application.
   license:
-    name: MIT
-    url: https://opensource.org/licenses/MIT
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
   termsOfService: http://swagger.io/terms/
   title: BookMyField API
   version: "1.0"
@@ -671,6 +672,68 @@ paths:
       summary: Update a field (Admin only)
       tags:
       - fields
+  /payments:
+    get:
+      description: Get all payments with booking and user details (admin only).
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Payment'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get all payments for admin
+      tags:
+      - payments
+  /payments/{id}:
+    get:
+      description: Get payment details by payment ID.
+      parameters:
+      - description: Payment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Payment'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get payment by ID
+      tags:
+      - payments
   /payments/create-checkout-session:
     post:
       consumes:
@@ -711,6 +774,31 @@ paths:
       summary: Create a checkout session
       tags:
       - payments
+  /payments/me:
+    get:
+      description: Get all payments for the authenticated user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Payment'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user's payments
+      tags:
+      - payments
   /payments/stripe-webhook:
     post:
       consumes:
@@ -734,13 +822,37 @@ paths:
       summary: Stripe webhook
       tags:
       - payments
+  /payments/stripe-webhook-test:
+    post:
+      consumes:
+      - application/json
+      description: Test webhook endpoint without signature validation for development/testing
+        purposes.
+      parameters:
+      - description: Test webhook payload
+        in: body
+        name: webhook_data
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Test Stripe webhook (Development only)
+      tags:
+      - payments
 schemes:
 - http
-- https
-securityDefinitions:
-  BearerAuth:
-    description: Type "Bearer" followed by a space and JWT token.
-    in: header
-    name: Authorization
-    type: apiKey
 swagger: "2.0"

@@ -11,13 +11,13 @@ const docTemplate = `{
         "title": "{{.Title}}",
         "termsOfService": "http://swagger.io/terms/",
         "contact": {
-            "name": "qullDev",
-            "url": "https://github.com/qullDev",
-            "email": "admin@bookmyfield.com"
+            "name": "API Support",
+            "url": "http://www.swagger.io/support",
+            "email": "support@swagger.io"
         },
         "license": {
-            "name": "MIT",
-            "url": "https://opensource.org/licenses/MIT"
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
         },
         "version": "{{.Version}}"
     },
@@ -700,6 +700,52 @@ const docTemplate = `{
                 }
             }
         },
+        "/payments": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all payments with booking and user details (admin only).",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "summary": "Get all payments for admin",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Payment"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/payments/create-checkout-session": {
             "post": {
                 "security": [
@@ -763,6 +809,46 @@ const docTemplate = `{
                 }
             }
         },
+        "/payments/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all payments for the authenticated user.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "summary": "Get user's payments",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Payment"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/payments/stripe-webhook": {
             "post": {
                 "description": "Handle Stripe webhook events to update payment and booking status.",
@@ -785,6 +871,104 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/payments/stripe-webhook-test": {
+            "post": {
+                "description": "Test webhook endpoint without signature validation for development/testing purposes.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "summary": "Test Stripe webhook (Development only)",
+                "parameters": [
+                    {
+                        "description": "Test webhook payload",
+                        "name": "webhook_data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/payments/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get payment details by payment ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "summary": "Get payment by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Payment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Payment"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/dto.ErrorResponse"
                         }
@@ -1004,6 +1188,9 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "notes": {
+                    "type": "string"
+                },
                 "payments": {
                     "type": "array",
                     "items": {
@@ -1088,7 +1275,7 @@ const docTemplate = `{
         "models.User": {
             "type": "object",
             "properties": {
-                "creadtedAt": {
+                "created_at": {
                     "type": "string"
                 },
                 "email": {
@@ -1100,22 +1287,14 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
-                "password": {
-                    "type": "string"
-                },
                 "role": {
                     "description": "user or admin",
                     "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
-        }
-    },
-    "securityDefinitions": {
-        "BearerAuth": {
-            "description": "Type \"Bearer\" followed by a space and JWT token.",
-            "type": "apiKey",
-            "name": "Authorization",
-            "in": "header"
         }
     }
 }`
@@ -1125,9 +1304,9 @@ var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "localhost:8080",
 	BasePath:         "/api/v1",
-	Schemes:          []string{"http", "https"},
+	Schemes:          []string{"http"},
 	Title:            "BookMyField API",
-	Description:      "API backend untuk sistem booking lapangan olahraga. Menyediakan endpoints untuk autentikasi, manajemen lapangan, booking, dan pembayaran.",
+	Description:      "This is a server for BookMyField application.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
