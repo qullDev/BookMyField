@@ -1,18 +1,18 @@
 // @title BookMyField API
 // @version 1.0
-// @description This is a server for BookMyField application.
+// @description This is a server for BookMyField application with complete payment integration via Stripe.
 // @termsOfService http://swagger.io/terms/
 
-// @contact.name API Support
-// @contact.url http://www.swagger.io/support
-// @contact.email support@swagger.io
+// @contact.name qullDev
+// @contact.url https://github.com/qullDev
+// @contact.email admin@bookmyfield.com
 
-// @license.name Apache 2.0
-// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+// @license.name MIT
+// @license.url https://opensource.org/licenses/MIT
 
-// @host localhost:8080
+// @host bookmyfield-production.up.railway.app
 // @BasePath /api/v1
-// @schemes http
+// @schemes https http
 package main
 
 import (
