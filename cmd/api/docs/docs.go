@@ -11,13 +11,13 @@ const docTemplate = `{
         "title": "{{.Title}}",
         "termsOfService": "http://swagger.io/terms/",
         "contact": {
-            "name": "API Support",
-            "url": "http://www.swagger.io/support",
-            "email": "support@swagger.io"
+            "name": "qullDev",
+            "url": "https://github.com/qullDev",
+            "email": "admin@bookmyfield.com"
         },
         "license": {
-            "name": "Apache 2.0",
-            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
         },
         "version": "{{.Version}}"
     },
@@ -1302,11 +1302,11 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:8080",
+	Host:             "bookmyfield-production.up.railway.app",
 	BasePath:         "/api/v1",
-	Schemes:          []string{"http"},
+	Schemes:          []string{"https", "http"},
 	Title:            "BookMyField API",
-	Description:      "This is a server for BookMyField application.",
+	Description:      "This is a server for BookMyField application with complete payment integration via Stripe.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
