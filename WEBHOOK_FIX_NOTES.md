@@ -2,12 +2,19 @@
 
 ## 🚨 Masalah yang Ditemukan
 
-Stripe webhook mengalami **"404 page not found"** karena routing conflict:
+Stripe webhook mengalami **"404 page not found"** karena dua masalah:
+
+### 1. **Routing Conflict (FIXED)**
 
 - Webhook endpoint: `POST /api/v1/payments/stripe-webhook`
 - Payment detail endpoint: `GET /api/v1/payments/:id`
 
-Ketika Stripe mencoba akses webhook endpoint, routing menganggap `stripe-webhook` sebagai `:id` parameter dan mengarahkan ke endpoint payment detail yang memerlukan authentication.
+Gin router menganggap `stripe-webhook` sebagai `:id` parameter dan mengarahkan ke endpoint payment detail yang memerlukan authentication.
+
+### 2. **URL Salah di Postman Collection (FIXED)**
+
+- URL yang salah: `{{base_url}}/api/v1/webhook` ❌
+- URL yang benar: `{{base_url}}/api/v1/payments/stripe-webhook` ✅
 
 ## ✅ Solusi yang Diterapkan
 
@@ -39,7 +46,27 @@ func PaymentRoutes(api *gin.RouterGroup) {
 }
 ```
 
-### 2. **Testing Fix**
+### 2. **Fix URL di Postman Collections**
+
+**Postman Collection (Salah):**
+
+```json
+"url": {
+  "raw": "{{base_url}}/api/v1/webhook", // ❌ URL salah
+  "path": ["api", "v1", "webhook"]
+}
+```
+
+**Postman Collection (Fixed):**
+
+```json
+"url": {
+  "raw": "{{base_url}}/api/v1/payments/stripe-webhook", // ✅ URL benar
+  "path": ["api", "v1", "payments", "stripe-webhook"]
+}
+```
+
+### 3. **Testing Fix**
 
 ```bash
 # Test webhook endpoint
@@ -68,12 +95,31 @@ Events yang perlu di-subscribe:
 ## 📋 Checklist Deployment
 
 - [x] Fix routing conflict
+- [x] Fix URL di Postman collections
 - [x] Test webhook endpoint accessibility
 - [x] Verify signature validation
-- [ ] Deploy to production
+- [x] Update documentation
+- [ ] Deploy to production (if needed)
 - [ ] Update Stripe webhook URL (if needed)
 - [ ] Test full payment flow
 
 ## 🚀 Status
 
 **FIXED** - Webhook endpoint sekarang dapat diakses tanpa 404 error.
+
+### ✅ Verification Results:
+
+```bash
+# Test URL yang salah
+curl -X POST "https://bookmyfield-production.up.railway.app/api/v1/webhook"
+# Response: 404 page not found ❌
+
+# Test URL yang benar
+curl -X POST "https://bookmyfield-production.up.railway.app/api/v1/payments/stripe-webhook"
+# Response: {"error":"Invalid webhook signature"} ✅ (Expected - webhook works!)
+```
+
+**Postman Collection URLs sudah diperbaiki:**
+
+- ✅ `postman_collection.json`
+- ✅ `postman_collection_production.json`
