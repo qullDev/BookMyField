@@ -7,6 +7,10 @@ import (
 )
 
 func PaymentRoutes(api *gin.RouterGroup) {
+	// Webhook endpoint (no authentication required - called by Stripe)
+	// Must be outside payment group to avoid middleware conflicts
+	api.POST("/payments/stripe-webhook", controllers.StripeWebhook)
+
 	payment := api.Group("/payments")
 	{
 		// Create checkout session (requires authentication)
@@ -20,8 +24,5 @@ func PaymentRoutes(api *gin.RouterGroup) {
 
 		// Get payment by ID (requires authentication, user can only access own payments)
 		payment.GET("/:id", middlewares.AuthMiddleware(), controllers.GetPaymentByID)
-
-		// Webhook endpoint (no authentication required - called by Stripe)
-		payment.POST("/stripe-webhook", controllers.StripeWebhook)
 	}
 }

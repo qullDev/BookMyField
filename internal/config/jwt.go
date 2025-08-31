@@ -10,7 +10,7 @@ import (
 var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
 
 func GenerateAccessToken(userID, role string) (string, int64, error) {
-	exp := time.Now().Add(time.Minute * 15).Unix()
+	exp := time.Now().Add(time.Hour * 24).Unix()
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": userID,

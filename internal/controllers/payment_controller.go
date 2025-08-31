@@ -36,14 +36,12 @@ func CreateCheckoutSession(c *gin.Context) {
 		return
 	}
 
-	// Get user ID from context
 	userID, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
 
-	// Check if booking exists and belongs to the user
 	var booking models.Booking
 	if err := config.DB.Preload("Field").
 		Where("id = ? AND user_id = ?", req.BookingID, userID).
@@ -52,14 +50,12 @@ func CreateCheckoutSession(c *gin.Context) {
 		return
 	}
 
-	// Check if payment already exists for this booking
 	var existingPayment models.Payment
 	if err := config.DB.Where("booking_id = ? AND status IN (?)", req.BookingID, []string{"pending", "succeeded"}).First(&existingPayment).Error; err == nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Payment already exists for this booking"})
 		return
 	}
 
-	// Check booking status
 	if booking.Status != "pending" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Booking is not in pending status"})
 		return
@@ -93,14 +89,13 @@ func CreateCheckoutSession(c *gin.Context) {
 		return
 	}
 
-	// Save Payment record with session ID instead of PaymentIntent ID
 	payment := models.Payment{
 		ID:          uuid.New(),
 		BookingID:   booking.ID,
 		Amount:      booking.Field.Price,
-		Currency:    "idr", // Changed to IDR
+		Currency:    "idr",
 		Status:      "pending",
-		StripeRefID: s.ID, // Use session ID for webhook matching
+		StripeRefID: s.ID, //  session ID for webhook matching
 	}
 	if err := config.DB.Create(&payment).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create payment record"})
@@ -250,7 +245,7 @@ func GetPaymentByID(c *gin.Context) {
 	// Check user role
 	role, roleExists := c.Get("role")
 	if !roleExists || role != "admin" {
-		// If not admin, only allow access to own payments
+		// If not admin, hanya payment milik user
 		query = query.Where("bookings.user_id = ?", userID)
 	}
 
